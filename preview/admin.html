@@ -564,6 +564,43 @@
         }
       };
 
+      // WhatsApp Delivery Boy Dispatch Helper
+      const shareToWhatsApp = (ord) => {
+        const itemsList = (ord.items || []).map((it, i) => `   ${i + 1}. ${it.name} (${it.unit}) x ${it.qty}`).join('\n');
+        const payNote = ord.payment === 'COD' ? `💵 Collect Cash: ₹${ord.total}` : `⚡ Paid Online via UPI: ₹${ord.total}`;
+        const msg = `🛵 *APNA KIRANA - NEW DELIVERY DISPATCH*\n` +
+          `━━━━━━━━━━━━━━━━━━━━━\n` +
+          `📦 *Order ID:* ${ord.id}\n` +
+          `👤 *Customer:* ${ord.customer}\n` +
+          `📞 *Call Customer:* ${ord.phone}\n\n` +
+          `📍 *Delivery Address:*\n${ord.address}\n` +
+          (ord.landmark ? `🏛️ Landmark: ${ord.landmark}\n` : '') +
+          `\n🛒 *Items to Deliver:*\n${itemsList}\n\n` +
+          `💰 *Payment:* ${payNote}\n` +
+          `━━━━━━━━━━━━━━━━━━━━━\n` +
+          `⚠️ *Target: 15-25 mins. Drive safely!*`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      };
+
+      // Export JSON Backup directly from Counter Web Dashboard
+      const exportJsonBackup = () => {
+        const payload = {
+          store: 'Apna Kirana & Daily Needs',
+          exportedAt: new Date().toISOString(),
+          ordersCount: orders.length,
+          productsCount: products.length,
+          orders,
+          products
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `apna_kirana_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
       const newOrdersList = orders.filter(o => o.status === 'RECEIVED');
       const packingOrdersList = orders.filter(o => o.status === 'PREPARING');
       const outOrdersList = orders.filter(o => o.status === 'OUT_FOR_DELIVERY');
@@ -838,6 +875,15 @@
                           ))}
                         </div>
 
+                        {/* WhatsApp Rider Dispatch Button */}
+                        <button
+                          onClick={() => shareToWhatsApp(ord)}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl mb-2 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-sm"
+                        >
+                          <span>💬</span>
+                          <span>Send to Rider (WhatsApp)</span>
+                        </button>
+
                         {/* Dispatch Button (52px height) */}
                         <button
                           onClick={() => dispatchOrder(ord.id)}
@@ -876,6 +922,15 @@
                           <p className="text-[11px] text-slate-500 truncate">📍 {ord.address}</p>
                           <p className="text-[11px] text-emerald-700 font-bold mt-1">Rider: {ord.rider}</p>
                         </div>
+
+                        {/* WhatsApp Customer / Rider Update */}
+                        <button
+                          onClick={() => shareToWhatsApp(ord)}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl mb-2 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-sm"
+                        >
+                          <span>💬</span>
+                          <span>WhatsApp Rider / Customer</span>
+                        </button>
 
                         {/* Mark Delivered Button (52px height) */}
                         <button
@@ -1050,10 +1105,40 @@
 
                   <button
                     onClick={() => alert("Settings saved live across all apps!")}
-                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md transition"
+                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md transition cursor-pointer"
                   >
                     Save All Settings ✓
                   </button>
+                </div>
+
+                {/* Cloud Disaster Recovery & Compliance Card */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">💾</span>
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">Cloud Disaster Recovery & Store Compliance</h3>
+                      <p className="text-xs text-slate-500">Export timestamped JSON snapshots of your inventory and orders, or review Google Play privacy disclosures.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <button
+                      onClick={exportJsonBackup}
+                      className="bg-purple-700 hover:bg-purple-800 text-white text-xs font-black px-5 py-3 rounded-2xl shadow flex items-center gap-2 transition active:scale-95 cursor-pointer"
+                    >
+                      <span>📥</span>
+                      <span>Export Full Store Backup (JSON)</span>
+                    </button>
+                    
+                    <a
+                      href="privacy.html"
+                      target="_blank"
+                      className="bg-slate-800 hover:bg-slate-900 text-emerald-400 text-xs font-bold px-5 py-3 rounded-2xl shadow flex items-center gap-2 transition active:scale-95"
+                    >
+                      <span>🛡️</span>
+                      <span>Google Play Privacy Policy →</span>
+                    </a>
+                  </div>
                 </div>
 
               </div>

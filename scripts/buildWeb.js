@@ -17,7 +17,8 @@ const filesToCopy = [
   { src: 'admin.html', dest: 'index.html' },        // Default web route is Shopkeeper Admin Dashboard
   { src: 'admin.html', dest: 'admin.html' },        // /admin.html
   { src: 'index.html', dest: 'customer.html' },     // /customer.html
-  { src: 'live_demo.html', dest: 'live_demo.html' } // /live_demo.html
+  { src: 'live_demo.html', dest: 'live_demo.html' },// /live_demo.html
+  { src: 'privacy.html', dest: 'privacy.html' }     // /privacy.html (Required for Google Play Store)
 ];
 
 filesToCopy.forEach(({ src, dest }) => {
