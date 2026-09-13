@@ -13,6 +13,8 @@ import { analyticsService } from './src/services/AnalyticsService';
 import { crashlyticsService } from './src/services/CrashlyticsService';
 import { CartItem, Product, Order, OrderItem } from './src/types/schema';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { doc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from './src/services/firebaseConfig';
 
 const INITIAL_PAST_ORDERS: Order[] = [
   {
@@ -124,6 +126,38 @@ function AppContent() {
     crashlyticsService.logBreadcrumb('navigation', `Screen switched to: ${currentScreen}`);
   }, [currentScreen]);
 
+  // 4. Real-time active order subscription from Firestore (Admin -> Customer updates)
+  useEffect(() => {
+    if (!activeOrder?.id || !isFirebaseConfigured()) return;
+    const cleanId = activeOrder.id.replace('#', '');
+    try {
+      const unsub = onSnapshot(
+        doc(db, 'orders', cleanId),
+        (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            const remoteStatus = data.status;
+            if (remoteStatus && remoteStatus !== activeOrder.status) {
+              console.log('🔄 Live order status update received from store:', remoteStatus);
+              setActiveOrder((prev) => (prev ? { ...prev, status: remoteStatus } : null));
+              setOrders((prev) =>
+                prev.map((o) =>
+                  o.id === activeOrder.id ? { ...o, status: remoteStatus } : o
+                )
+              );
+            }
+          }
+        },
+        (err) => {
+          console.warn('Live order listener note:', err.message);
+        }
+      );
+      return () => unsub();
+    } catch (e) {
+      console.warn('Live order listener setup note:', e);
+    }
+  }, [activeOrder?.id, activeOrder?.status]);
+
   // If not authenticated, render LoginScreen directly
   if (!isAuthenticated) {
     return <LoginScreen onSuccess={() => setCurrentScreen('HOME')} />;
@@ -216,7 +250,7 @@ function AppContent() {
     setCart({});
   };
 
-  const handleOrderPlaced = (newOrder: Order) => {
+  const handleOrderPlaced = async (newOrder: Order) => {
     analyticsService.logOrderPlaced({
       orderId: newOrder.id,
       totalAmount: newOrder.finalTotal,
@@ -228,6 +262,51 @@ function AppContent() {
     setActiveOrder(newOrder);
     setCart({});
     setCurrentScreen('TRACKING');
+
+    // Sync to Firestore so Shopkeeper Admin counter tablet chimes and receives it live
+    if (isFirebaseConfigured()) {
+      try {
+        const cleanId = newOrder.id.replace('#', '');
+        const orderRef = doc(db, 'orders', cleanId);
+        await setDoc(orderRef, {
+          order_id: newOrder.id,
+          customer_uid: newOrder.customerId || userProfile?.uid || 'cust_user_001',
+          customer_name: newOrder.customerName || userProfile?.name || 'Customer',
+          customer_phone: newOrder.customerPhone || userProfile?.phone_number || '+919876543210',
+          delivery_address: newOrder.deliveryAddress,
+          items: newOrder.items.map((it) => ({
+            product_id: it.productId,
+            name: it.productName,
+            unit_size: it.unit,
+            quantity: it.quantity,
+            selling_price: it.unitPrice,
+            subtotal: it.totalPrice,
+            image_url: it.imageUrl || '',
+          })),
+          item_total: newOrder.itemTotal,
+          delivery_fee: newOrder.deliveryFee,
+          discount_amount: newOrder.discountAmount,
+          total_amount: newOrder.finalTotal,
+          final_total: newOrder.finalTotal,
+          payment_method: newOrder.paymentMethod,
+          payment_status: newOrder.paymentStatus,
+          transaction_ref: newOrder.transactionRef || '',
+          status: 'RECEIVED',
+          status_timeline: [
+            {
+              status: 'RECEIVED',
+              timestamp: new Date().toISOString(),
+              note: 'Order placed by customer via mobile app',
+            },
+          ],
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
+        });
+        console.log('✅ Order synced to Firestore collection orders:', cleanId);
+      } catch (err: any) {
+        console.warn('⚠️ Firestore order write note:', err.message);
+      }
+    }
   };
 
   const handleTrackOrder = (orderId: string) => {

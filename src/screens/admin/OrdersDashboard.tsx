@@ -8,7 +8,7 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
-import { useAdminOrders } from '../../hooks/useAdminOrders';
+import { useAdminOrdersRealtime } from '../../hooks/useAdminOrdersRealtime';
 import { useAudioAlert } from '../../hooks/useAudioAlert';
 import { OrderCard } from './components/OrderCard';
 import { Colors, Typography, Spacing, Shadows } from '../../theme/colors';
@@ -23,7 +23,7 @@ export const OrdersDashboard: React.FC = () => {
     dispatchOrder,
     markDelivered,
     simulateIncomingOrder,
-  } = useAdminOrders();
+  } = useAdminOrdersRealtime();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTabFilter, setActiveTabFilter] = useState<

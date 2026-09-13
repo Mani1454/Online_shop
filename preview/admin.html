@@ -8,6 +8,9 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Firebase JS SDK (Compat for simple script tag execution) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     body {
@@ -23,6 +26,28 @@
 
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+    // Real Firebase Configuration for apna-general-store-6c6d5
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBST9eGtBYajBeFU2ONiEDQ0cukwwsoWv0",
+      authDomain: "apna-general-store-6c6d5.firebaseapp.com",
+      projectId: "apna-general-store-6c6d5",
+      storageBucket: "apna-general-store-6c6d5.firebasestorage.app",
+      messagingSenderId: "1077742866985",
+      appId: "1:1077742866985:web:6b1513518fff9d50330238"
+    };
+
+    let firebaseDb = null;
+    try {
+      if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        firebaseDb = firebase.firestore();
+      }
+    } catch (e) {
+      console.warn('Firebase init notice:', e);
+    }
 
     // --- Web Audio API Chime Hook Implementation ---
     function useAudioAlert(shouldRing) {
@@ -263,21 +288,119 @@
       const [standardDeliveryFee, setStandardDeliveryFee] = useState('20');
       const [upiVpa, setUpiVpa] = useState('apnakirana@okaxis');
 
+      // Real-Time Firestore Sync Listener
+      useEffect(() => {
+        if (!firebaseDb) return;
+        let unsub = null;
+        try {
+          unsub = firebaseDb.collection('orders').orderBy('created_at', 'desc').onSnapshot(
+            (snapshot) => {
+              if (!snapshot.empty) {
+                const liveList = snapshot.docs.map(doc => {
+                  const data = doc.data();
+                  const createdAtDate = data.created_at?.toDate ? data.created_at.toDate() : new Date();
+                  const elapsed = Math.max(0, Math.floor((Date.now() - createdAtDate.getTime()) / 60000));
+                  return {
+                    id: data.order_id || doc.id,
+                    docId: doc.id,
+                    customer: data.customer_name || 'Customer',
+                    phone: data.customer_phone || '+919876543210',
+                    address: data.delivery_address?.streetAddress || 'Doorstep Delivery',
+                    landmark: data.delivery_address?.landmark || '',
+                    payment: data.payment_method || 'COD',
+                    total: data.total_amount || data.final_total || 0,
+                    status: data.status || 'RECEIVED',
+                    elapsedMinutes: elapsed,
+                    rider: data.delivery_partner?.name || '',
+                    items: (data.items || []).map((it, idx) => ({
+                      id: it.product_id || `it_${idx}`,
+                      name: it.name || it.productName || 'Grocery Item',
+                      unit: it.unit_size || it.unit || '1 unit',
+                      qty: it.quantity || 1,
+                      price: it.selling_price || it.unitPrice || 0
+                    }))
+                  };
+                });
+                setOrders(liveList);
+              }
+            },
+            (err) => {
+              console.warn('Firestore live listener note:', err.message);
+            }
+          );
+        } catch (e) {
+          console.warn('Firestore subscription note:', e);
+        }
+        return () => { if (unsub) unsub(); };
+      }, []);
+
       // Audio Alert Hook
       const hasNewOrders = orders.some(o => o.status === 'RECEIVED');
       const { isRinging, isMuted, toggleMute, playChime } = useAudioAlert(hasNewOrders);
 
-      // Order Transitions
-      const acceptOrder = (orderId) => {
+      // Order Transitions (Synced with Firestore Cloud Database)
+      const acceptOrder = async (orderId) => {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'PREPARING' } : o));
+        if (firebaseDb) {
+          try {
+            const cleanId = orderId.replace('#', '');
+            await firebaseDb.collection('orders').doc(cleanId).update({
+              status: 'PREPARING',
+              status_timeline: firebase.firestore.FieldValue.arrayUnion({
+                status: 'PREPARING',
+                timestamp: new Date().toISOString(),
+                note: 'Shopkeeper accepted & started packing'
+              }),
+              updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('✅ Order accepted in Firestore:', cleanId);
+          } catch (e) {
+            console.warn('Firestore update note:', e.message);
+          }
+        }
       };
 
-      const dispatchOrder = (orderId) => {
+      const dispatchOrder = async (orderId) => {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'OUT_FOR_DELIVERY', rider: 'Ramesh (+919876001122)' } : o));
+        if (firebaseDb) {
+          try {
+            const cleanId = orderId.replace('#', '');
+            await firebaseDb.collection('orders').doc(cleanId).update({
+              status: 'OUT_FOR_DELIVERY',
+              delivery_partner: { name: 'Ramesh (Delivery Partner)', phone: '+919876001122' },
+              status_timeline: firebase.firestore.FieldValue.arrayUnion({
+                status: 'OUT_FOR_DELIVERY',
+                timestamp: new Date().toISOString(),
+                note: 'Dispatched with delivery partner'
+              }),
+              updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('✅ Order dispatched in Firestore:', cleanId);
+          } catch (e) {
+            console.warn('Firestore dispatch note:', e.message);
+          }
+        }
       };
 
-      const markDelivered = (orderId) => {
+      const markDelivered = async (orderId) => {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'DELIVERED' } : o));
+        if (firebaseDb) {
+          try {
+            const cleanId = orderId.replace('#', '');
+            await firebaseDb.collection('orders').doc(cleanId).update({
+              status: 'DELIVERED',
+              status_timeline: firebase.firestore.FieldValue.arrayUnion({
+                status: 'DELIVERED',
+                timestamp: new Date().toISOString(),
+                note: 'Delivered safely at doorstep'
+              }),
+              updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('✅ Order marked delivered in Firestore:', cleanId);
+          } catch (e) {
+            console.warn('Firestore delivery note:', e.message);
+          }
+        }
       };
 
       const toggleCheck = (itemId) => {
@@ -305,8 +428,10 @@
       };
 
       // Simulate incoming order
-      const simulateIncoming = () => {
-        const id = `#ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+      const simulateIncoming = async () => {
+        const randNum = Math.floor(1000 + Math.random() * 9000);
+        const id = `#ORD-${randNum}`;
+        const cleanId = `ORD-${randNum}`;
         const newOrd = {
           id,
           customer: 'Sunita Mehra',
@@ -323,6 +448,43 @@
           ]
         };
         setOrders(prev => [newOrd, ...prev]);
+
+        if (firebaseDb) {
+          try {
+            await firebaseDb.collection('orders').doc(cleanId).set({
+              order_id: id,
+              customer_uid: 'sim_cust_user',
+              customer_name: 'Sunita Mehra',
+              customer_phone: '+919810987654',
+              delivery_address: {
+                label: 'Home',
+                streetAddress: 'Block C, Flat 104, Royal Palms',
+                landmark: 'Behind Post Office',
+                pincode: '110001'
+              },
+              items: [
+                { product_id: 'prod-bread-06', name: 'Harvest Gold White Bread', unit_size: '400 g', quantity: 1, selling_price: 42, subtotal: 42 },
+                { product_id: 'prod-milk-04', name: 'Amul Taaza Toned Fresh Milk', unit_size: '500 ml', quantity: 2, selling_price: 27, subtotal: 54 }
+              ],
+              item_total: 96,
+              delivery_fee: 20,
+              discount_amount: 0,
+              total_amount: 116,
+              final_total: 116,
+              payment_method: newOrd.payment,
+              payment_status: 'PENDING',
+              status: 'RECEIVED',
+              status_timeline: [
+                { status: 'RECEIVED', timestamp: new Date().toISOString(), note: 'Simulated counter order' }
+              ],
+              created_at: firebase.firestore.FieldValue.serverTimestamp(),
+              updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('✅ Simulated order saved to Firestore:', cleanId);
+          } catch (e) {
+            console.warn('Simulation Firestore note:', e.message);
+          }
+        }
       };
 
       const newOrdersList = orders.filter(o => o.status === 'RECEIVED');

@@ -17,28 +17,30 @@ import {
   FirestoreStoreConfig,
 } from '../../schema/firestore.init';
 
-// Read configuration from environment variables (supports Vite, Create-React-App, & Expo)
-const getEnvVar = (key: string, fallback: string): string => {
-  if (typeof process !== 'undefined' && process.env) {
-    if (process.env[`VITE_${key}`]) return process.env[`VITE_${key}`]!;
-    if (process.env[`REACT_APP_${key}`]) return process.env[`REACT_APP_${key}`]!;
-    if (process.env[`EXPO_PUBLIC_${key}`]) return process.env[`EXPO_PUBLIC_${key}`]!;
-  }
-  return fallback;
-};
-
+// Real project credentials for apna-general-store-6c6d5 with robust fallbacks
 const firebaseConfig = {
-  apiKey: getEnvVar('FIREBASE_API_KEY', 'demo-api-key-apna-kirana'),
-  authDomain: getEnvVar('FIREBASE_AUTH_DOMAIN', 'apna-kirana.firebaseapp.com'),
-  projectId: getEnvVar('FIREBASE_PROJECT_ID', 'apna-kirana-store'),
-  storageBucket: getEnvVar('FIREBASE_STORAGE_BUCKET', 'apna-kirana-store.appspot.com'),
-  messagingSenderId: getEnvVar('FIREBASE_MESSAGING_SENDER_ID', '1029384756'),
-  appId: getEnvVar('FIREBASE_APP_ID', '1:1029384756:web:abcd1234efgh5678'),
+  apiKey:
+    (typeof process !== 'undefined' && process.env && (process.env.EXPO_PUBLIC_FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY)) ||
+    'AIzaSyBST9eGtBYajBeFU2ONiEDQ0cukwwsoWv0',
+  authDomain:
+    (typeof process !== 'undefined' && process.env && (process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.VITE_FIREBASE_AUTH_DOMAIN)) ||
+    'apna-general-store-6c6d5.firebaseapp.com',
+  projectId:
+    (typeof process !== 'undefined' && process.env && (process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID)) ||
+    'apna-general-store-6c6d5',
+  storageBucket:
+    (typeof process !== 'undefined' && process.env && (process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.VITE_FIREBASE_STORAGE_BUCKET)) ||
+    'apna-general-store-6c6d5.firebasestorage.app',
+  messagingSenderId:
+    (typeof process !== 'undefined' && process.env && (process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || process.env.VITE_FIREBASE_MESSAGING_SENDER_ID)) ||
+    '1077742866985',
+  appId:
+    (typeof process !== 'undefined' && process.env && (process.env.EXPO_PUBLIC_FIREBASE_APP_ID || process.env.VITE_FIREBASE_APP_ID)) ||
+    '1:1077742866985:web:6b1513518fff9d50330238',
 };
 
 export const isFirebaseConfigured = (): boolean => {
-  const key = getEnvVar('FIREBASE_API_KEY', '');
-  return key !== '' && key !== 'demo-api-key-apna-kirana';
+  return Boolean(firebaseConfig.apiKey && firebaseConfig.apiKey !== 'demo-api-key-apna-kirana');
 };
 
 export const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
