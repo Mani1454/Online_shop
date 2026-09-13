@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -47,6 +47,9 @@
         "projectId": "15de8dbb-d047-4f7b-a3df-b5c1d653783f"
       }
     },
-    "owner": "manis8873"
+    "owner": "manis8873",
+    "plugins": [
+      "expo-asset"
+    ]
   }
 }
