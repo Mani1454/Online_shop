@@ -59,7 +59,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
             accessibilityRole="button"
             accessibilityLabel="View all categories"
           >
-            <Text style={styles.viewAllText}>View All →</Text>
+            <Text style={styles.viewAllText}>View All</Text>
           </TouchableOpacity>
         )}
       </View>

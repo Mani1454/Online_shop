@@ -18,14 +18,23 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
-  const { sendPhoneOtp, verifyOtp, loading, error, clearError, quickLoginDemo } = useAuth();
+  const { sendPhoneOtp, verifyOtp, loginWithPin, loading, error, clearError } = useAuth();
 
-  // Screen State: 'PHONE_ENTRY' | 'OTP_ENTRY'
+  // Mode: 'CUSTOMER' | 'SHOPKEEPER'
+  const [loginMode, setLoginMode] = useState<'CUSTOMER' | 'SHOPKEEPER'>('CUSTOMER');
+
+  // Screen Step: 'PHONE_ENTRY' | 'OTP_ENTRY'
   const [step, setStep] = useState<'PHONE_ENTRY' | 'OTP_ENTRY'>('PHONE_ENTRY');
   
   // Phone Input State (10 digits without +91)
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  // Shopkeeper Credentials State
+  const [shopkeeperPhone, setShopkeeperPhone] = useState('8873679268');
+  const [shopkeeperPin, setShopkeeperPin] = useState('');
+  const [shopkeeperError, setShopkeeperError] = useState<string | null>(null);
+  const [showPin, setShowPin] = useState(false);
 
   // 6-digit OTP Array State
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
@@ -88,6 +97,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
       setTimeout(() => {
         otpInputRefs.current[0]?.focus();
       }, 150);
+    }
+  };
+
+  // Validate and submit Shopkeeper PIN login
+  const handleShopkeeperLogin = async () => {
+    clearError();
+    setShopkeeperError(null);
+    if (!shopkeeperPhone || shopkeeperPhone.length !== 10) {
+      setShopkeeperError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!shopkeeperPin || shopkeeperPin.length < 4) {
+      setShopkeeperError('Please enter your 4-digit Store Security PIN.');
+      return;
+    }
+    const success = await loginWithPin(shopkeeperPhone, shopkeeperPin);
+    if (success && onSuccess) {
+      onSuccess();
     }
   };
 
@@ -171,25 +198,62 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           <Text style={styles.title}>Apna Kirana</Text>
           <Text style={styles.subtitle}>
             {step === 'PHONE_ENTRY'
-              ? 'Enter your mobile number to get instant neighborhood deliveries'
+              ? (loginMode === 'CUSTOMER'
+                  ? 'Enter your mobile number for fast neighborhood grocery deliveries'
+                  : 'Counter administration login with registered phone & security PIN')
               : `Enter the 6-digit code sent to +91 ${phoneNumber}`}
           </Text>
         </View>
 
+        {/* Role Selection Tabs (Only on Phone Entry) */}
+        {step === 'PHONE_ENTRY' && (
+          <View style={styles.roleTabsContainer}>
+            <TouchableOpacity
+              style={[styles.roleTab, loginMode === 'CUSTOMER' && styles.roleTabActive]}
+              onPress={() => {
+                setLoginMode('CUSTOMER');
+                clearError();
+                setPhoneError(null);
+                setShopkeeperError(null);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.roleTabText, loginMode === 'CUSTOMER' && styles.roleTabTextActive]}>
+                👤 Customer (ग्राहक)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.roleTab, loginMode === 'SHOPKEEPER' && styles.roleTabActive]}
+              onPress={() => {
+                setLoginMode('SHOPKEEPER');
+                clearError();
+                setPhoneError(null);
+                setShopkeeperError(null);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.roleTabText, loginMode === 'SHOPKEEPER' && styles.roleTabTextActive]}>
+                💼 Shopkeeper (दुकानदार)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Global Error Banner */}
-        {(error || phoneError) && (
+        {(error || phoneError || shopkeeperError) && (
           <View style={styles.errorBanner}>
             <Text style={styles.errorIcon}>⚠️</Text>
-            <Text style={styles.errorText}>{error || phoneError}</Text>
+            <Text style={styles.errorText}>{error || phoneError || shopkeeperError}</Text>
           </View>
         )}
 
         {/* --------------------------------------------------------------- */}
-        {/* STEP 1: PHONE NUMBER INPUT                                      */}
+        {/* STEP 1A: CUSTOMER MOBILE OTP LOGIN                              */}
         {/* --------------------------------------------------------------- */}
-        {step === 'PHONE_ENTRY' && (
+        {step === 'PHONE_ENTRY' && loginMode === 'CUSTOMER' && (
           <View style={styles.card}>
-            <Text style={styles.inputLabel}>Mobile Phone Number</Text>
+            <Text style={styles.inputLabel}>Customer Mobile Number</Text>
 
             <View style={styles.phoneInputContainer}>
               {/* Country Code Fixed Tag */}
@@ -216,7 +280,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               We will send you a 6-digit SMS verification code. No password required!
             </Text>
 
-            {/* Primary Action Button (Min 48x48dp target) */}
+            {/* Primary Action Button */}
             <TouchableOpacity
               style={[
                 styles.primaryButton,
@@ -229,37 +293,87 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.primaryButtonText}>Get Verification Code →</Text>
+                <Text style={styles.primaryButtonText}>Get Verification Code</Text>
               )}
             </TouchableOpacity>
+          </View>
+        )}
 
-            {/* Quick Demo Shortcuts for instant 1-tap testing */}
-            <View style={styles.demoSection}>
-              <Text style={styles.demoLabel}>⚡ Quick Test Shortcuts (Instant Demo)</Text>
-              <View style={styles.demoButtonsRow}>
-                <TouchableOpacity
-                  style={styles.demoButton}
-                  onPress={() => {
-                    quickLoginDemo('customer');
-                    onSuccess?.();
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.demoButtonText}>👤 Customer Login</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.demoButton, styles.demoAdminButton]}
-                  onPress={() => {
-                    quickLoginDemo('admin');
-                    onSuccess?.();
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.demoAdminButtonText}>💼 Shopkeeper Login</Text>
-                </TouchableOpacity>
+        {/* --------------------------------------------------------------- */}
+        {/* STEP 1B: SHOPKEEPER CREDENTIAL PIN LOGIN                         */}
+        {/* --------------------------------------------------------------- */}
+        {step === 'PHONE_ENTRY' && loginMode === 'SHOPKEEPER' && (
+          <View style={styles.card}>
+            <Text style={styles.inputLabel}>Shopkeeper Registered Phone</Text>
+            <View style={styles.phoneInputContainer}>
+              <View style={styles.countryCodeBadge}>
+                <Text style={styles.flagEmoji}>🇮🇳</Text>
+                <Text style={styles.countryCodeText}>+91</Text>
               </View>
+              <TextInput
+                style={styles.phoneInput}
+                placeholder="88736 79268"
+                placeholderTextColor="#94A3B8"
+                keyboardType="number-pad"
+                maxLength={10}
+                value={shopkeeperPhone}
+                onChangeText={(t) => {
+                  setShopkeeperPhone(t.replace(/\D/g, '').slice(0, 10));
+                  clearError();
+                  setShopkeeperError(null);
+                }}
+                editable={!loading}
+              />
             </View>
+
+            <Text style={[styles.inputLabel, { marginTop: Spacing.md }]}>
+              Store Security PIN (सुरक्षा पिन)
+            </Text>
+            <View style={styles.pinInputContainer}>
+              <TextInput
+                style={styles.pinInput}
+                placeholder="Enter 4-digit PIN"
+                placeholderTextColor="#64748B"
+                keyboardType="number-pad"
+                secureTextEntry={!showPin}
+                maxLength={6}
+                value={shopkeeperPin}
+                onChangeText={(t) => {
+                  setShopkeeperPin(t.replace(/\D/g, ''));
+                  clearError();
+                  setShopkeeperError(null);
+                }}
+                editable={!loading}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPin(!showPin)}
+                style={styles.eyeButton}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.eyeButtonText}>{showPin ? '🙈' : '👁️'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.helperText}>
+              💡 Store Security PIN is configured in Store Settings (Default PIN: 8873)
+            </Text>
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                styles.shopkeeperButton,
+                (!shopkeeperPin || shopkeeperPhone.length !== 10 || loading) && styles.disabledButton,
+              ]}
+              onPress={handleShopkeeperLogin}
+              disabled={!shopkeeperPin || shopkeeperPhone.length !== 10 || loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.primaryButtonText}>Login as Shopkeeper</Text>
+              )}
+            </TouchableOpacity>
           </View>
         )}
 
@@ -581,45 +695,62 @@ const styles = StyleSheet.create({
     color: '#CBD5E1',
     fontWeight: '800',
   },
-  demoSection: {
-    marginTop: Spacing.lg,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-  },
-  demoLabel: {
-    ...Typography.labelSmall,
-    color: '#94A3B8',
-    marginBottom: Spacing.sm,
-    fontWeight: '700',
-  },
-  demoButtonsRow: {
+  roleTabsContainer: {
     flexDirection: 'row',
-    gap: 8,
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 4,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: '#334155',
   },
-  demoButton: {
+  roleTab: {
     flex: 1,
-    height: 42,
-    backgroundColor: '#064E3B',
+    paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#059669',
   },
-  demoButtonText: {
-    ...Typography.labelSmall,
-    color: '#A7F3D0',
+  roleTabActive: {
+    backgroundColor: Colors.brandPrimary,
+    ...Shadows.sm,
+  },
+  roleTabText: {
+    ...Typography.labelMedium,
+    color: '#94A3B8',
+    fontWeight: '700',
+  },
+  roleTabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+  },
+  pinInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    borderWidth: 1.5,
+    borderColor: '#334155',
+    borderRadius: 16,
+    marginBottom: Spacing.xs,
+  },
+  pinInput: {
+    flex: 1,
+    height: 52,
+    paddingHorizontal: Spacing.md,
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: '800',
+    letterSpacing: 4,
   },
-  demoAdminButton: {
-    backgroundColor: '#1E293B',
-    borderColor: '#64748B',
+  eyeButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
-  demoAdminButtonText: {
-    ...Typography.labelSmall,
-    color: '#F1F5F9',
-    fontWeight: '800',
+  eyeButtonText: {
+    fontSize: 18,
+  },
+  shopkeeperButton: {
+    backgroundColor: '#059669',
   },
   demoHintBox: {
     backgroundColor: '#0F172A',

@@ -311,7 +311,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({
           accessibilityLabel={`Proceed to checkout. Total payable ₹${grandTotal}`}
         >
           <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-          <Text style={styles.checkoutButtonArrow}>→</Text>
+          <Text style={styles.checkoutButtonArrow}>›</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

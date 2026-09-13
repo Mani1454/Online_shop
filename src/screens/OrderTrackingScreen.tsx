@@ -304,7 +304,7 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({
             onPress={onViewOrderHistory}
             activeOpacity={0.8}
           >
-            <Text style={styles.historyBtnText}>📜 View Past Order History →</Text>
+            <Text style={styles.historyBtnText}>📜 View Past Order History</Text>
           </TouchableOpacity>
         )}
       </ScrollView>

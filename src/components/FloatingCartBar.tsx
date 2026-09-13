@@ -70,7 +70,7 @@ export const FloatingCartBar: React.FC<FloatingCartBarProps> = ({
 
         <View style={styles.viewCartAction}>
           <Text style={styles.viewCartText}>View Cart</Text>
-          <Text style={styles.cartArrowIcon}>→</Text>
+          <Text style={styles.cartArrowIcon}>›</Text>
         </View>
       </TouchableOpacity>
     </View>

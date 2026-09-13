@@ -229,7 +229,7 @@ export const OrderKanbanCard: React.FC<OrderKanbanCardProps> = ({
           >
             <Text style={styles.dispatchBtnIcon}>🛵</Text>
             <Text style={styles.dispatchBtnText}>
-              Hand Over to Rider (Dispatch) →
+              Hand Over to Rider (Dispatch)
             </Text>
           </TouchableOpacity>
         )}
