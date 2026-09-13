@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
+import { Platform } from 'react-native';
+
 /**
  * useAudioAlert: Web Audio API notification chime hook for shopkeeper tablets
  * Generates an attention-grabbing dual-harmonic chime without any external audio file dependencies.
@@ -12,7 +14,7 @@ export function useAudioAlert(shouldRing: boolean) {
 
   // Initialize or resume AudioContext
   const getAudioContext = useCallback((): AudioContext | null => {
-    if (typeof window === 'undefined') return null;
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
 
     if (!audioCtxRef.current) {
       const AudioContextClass =
@@ -72,9 +74,9 @@ export function useAudioAlert(shouldRing: boolean) {
     if (intervalRef.current !== null) return;
     playChime();
     setIsRinging(true);
-    intervalRef.current = window.setInterval(() => {
+    intervalRef.current = setInterval(() => {
       playChime();
-    }, 1800);
+    }, 1800) as unknown as number;
   }, [playChime]);
 
   // Stop looping chime

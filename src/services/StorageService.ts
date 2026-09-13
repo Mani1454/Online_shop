@@ -116,6 +116,16 @@ class StorageService {
         initialBytes = source.startsWith('data:') ? Math.round((source.length * 3) / 4) : 200000;
       } else {
         initialBytes = source.size;
+        if (typeof window === 'undefined' || typeof document === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+          resolve({
+            blob: source,
+            dataUrl: '',
+            originalSizeKb: Math.round(initialBytes / 1024),
+            compressedSizeKb: Math.round(initialBytes / 1024),
+            savedPercent: 0,
+          });
+          return;
+        }
         srcUrl = URL.createObjectURL(source);
       }
 

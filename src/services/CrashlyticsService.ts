@@ -19,7 +19,7 @@ class CrashlyticsService {
   setUserId(userId: string) {
     // Sanitize: If user ID resembles a phone number (+91...), hash/anonymize it
     const sanitizedId = userId.startsWith('+') || /^\d{10,}$/.test(userId)
-      ? `anon_${btoa(userId).slice(0, 12)}`
+      ? `anon_${userId.slice(-4)}_${Date.now().toString(36)}`
       : userId;
 
     this.anonymizedUserId = sanitizedId;

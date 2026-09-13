@@ -179,7 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (isFirebaseConfigured()) {
         // Initialize reCAPTCHA verifier if in browser environment
         let appVerifier: any = undefined;
-        if (typeof window !== 'undefined' && document.getElementById(recaptchaContainerId)) {
+        if (typeof document !== 'undefined' && typeof document.getElementById === 'function' && document.getElementById(recaptchaContainerId)) {
           appVerifier = new RecaptchaVerifier(auth, recaptchaContainerId, {
             size: 'invisible',
           });
