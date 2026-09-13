@@ -135,7 +135,7 @@ function AppContent() {
       <View style={{ flex: 1, backgroundColor: '#0F172A' }}>
         <View style={appStyles.authBar}>
           <Text style={appStyles.authBarText}>
-            💼 <Text style={{ fontWeight: 'bold' }}>{userProfile?.name}</Text> ({userProfile?.phone_number})
+            {`💼 ${userProfile?.name || 'Shopkeeper'} (${userProfile?.phone_number || ''})`}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity
@@ -347,7 +347,7 @@ function AppContent() {
       {/* Persistent Auth Top Bar */}
       <View style={appStyles.authBar}>
         <Text style={appStyles.authBarText}>
-          👤 <Text style={{ fontWeight: 'bold' }}>{userProfile?.name}</Text> ({userProfile?.phone_number})
+          {`👤 ${userProfile?.name || 'Customer'} (${userProfile?.phone_number || ''})`}
         </Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {role === 'admin' && (

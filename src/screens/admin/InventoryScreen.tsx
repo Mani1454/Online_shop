@@ -264,7 +264,7 @@ export const InventoryScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Real-time Success Notification Toast */}
-      {successToast && (
+      {Boolean(successToast) && (
         <View style={styles.toastBanner}>
           <Text style={styles.toastText}>{successToast}</Text>
         </View>
@@ -342,7 +342,7 @@ export const InventoryScreen: React.FC = () => {
               />
               <View style={styles.nameGroup}>
                 <Text style={styles.nameText}>{prod.name}</Text>
-                {prod.nameLocalized && (
+                {Boolean(prod.nameLocalized) && (
                   <Text style={styles.localizedText}>{prod.nameLocalized}</Text>
                 )}
               </View>

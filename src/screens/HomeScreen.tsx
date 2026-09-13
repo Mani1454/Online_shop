@@ -321,7 +321,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         />
 
         {/* Filter State Reset Banner */}
-        {selectedCategoryId && (
+        {Boolean(selectedCategoryId) && (
           <View style={styles.activeFilterPill}>
             <Text style={styles.activeFilterText}>
               Showing category:{' '}

@@ -287,7 +287,7 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({
                 <Text style={styles.addressBoxStreet}>
                   {order.deliveryAddress.streetAddress}
                 </Text>
-                {order.deliveryAddress.landmark && (
+                {Boolean(order.deliveryAddress.landmark) && (
                   <Text style={styles.addressBoxLandmark}>
                     Landmark: {order.deliveryAddress.landmark}
                   </Text>

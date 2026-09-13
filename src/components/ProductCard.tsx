@@ -78,7 +78,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </Text>
 
         {/* Localized Hindi Name */}
-        {product.nameLocalized && (
+        {Boolean(product.nameLocalized) && (
           <Text style={styles.localizedName} numberOfLines={1}>
             {product.nameLocalized}
           </Text>

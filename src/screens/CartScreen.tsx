@@ -171,7 +171,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({
                   <Text style={styles.itemName} numberOfLines={2}>
                     {product.name}
                   </Text>
-                  {product.nameLocalized && (
+                  {Boolean(product.nameLocalized) && (
                     <Text style={styles.itemLocalizedName}>
                       {product.nameLocalized}
                     </Text>

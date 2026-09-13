@@ -361,7 +361,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   </Text>
 
                   {/* Web Native File Input Button */}
-                  {Platform.OS === 'web' && (
+                  {Platform.OS === 'web' ? (
                     <div>
                       <input
                         id={fileInputId}
@@ -391,7 +391,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                         📸 Take Photo or Upload File
                       </label>
                     </div>
-                  )}
+                  ) : null}
                 </View>
               </View>
 

@@ -198,7 +198,7 @@ export const AddressSelector: React.FC<AddressSelectorProps> = ({
                   {address.streetAddress}
                 </Text>
 
-                {address.landmark && (
+                {Boolean(address.landmark) && (
                   <Text style={styles.landmarkText} numberOfLines={1}>
                     Near {address.landmark}
                   </Text>

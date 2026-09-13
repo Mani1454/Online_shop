@@ -239,7 +239,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               <View style={styles.demoButtonsRow}>
                 <TouchableOpacity
                   style={styles.demoButton}
-                  onPress={() => quickLoginDemo('customer')}
+                  onPress={() => {
+                    quickLoginDemo('customer');
+                    onSuccess?.();
+                  }}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.demoButtonText}>👤 Customer Login</Text>
@@ -247,7 +250,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
                 <TouchableOpacity
                   style={[styles.demoButton, styles.demoAdminButton]}
-                  onPress={() => quickLoginDemo('admin')}
+                  onPress={() => {
+                    quickLoginDemo('admin');
+                    onSuccess?.();
+                  }}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.demoAdminButtonText}>💼 Shopkeeper Login</Text>
@@ -344,7 +350,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
 
             <View style={styles.demoHintBox}>
               <Text style={styles.demoHintText}>
-                💡 <b>Demo Tip:</b> Enter <Text style={styles.monoCode}>123456</Text> to verify instantly in offline mode.
+                💡 <Text style={{ fontWeight: 'bold', color: '#E2E8F0' }}>Demo Tip:</Text> Enter <Text style={styles.monoCode}>123456</Text> to verify instantly in offline mode.
               </Text>
             </View>
           </View>

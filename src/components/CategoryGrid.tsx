@@ -116,7 +116,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                 {category.name}
               </Text>
 
-              {category.nameLocalized && (
+              {Boolean(category.nameLocalized) && (
                 <Text
                   style={styles.categoryLocalized}
                   numberOfLines={1}
