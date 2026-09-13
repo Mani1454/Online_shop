@@ -1,0 +1,1670 @@
+{
+  "projectId": "apna-general-store-6c6d5",
+  "exportedAt": "2026-09-13T18:50:55.421Z",
+  "collections": {
+    "products": [
+      {
+        "id": "prod_001",
+        "name_localized": "आशीर्वाद चक्की आटा",
+        "name": "Aashirvaad Shudh Chakki Atta",
+        "image_url": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80",
+        "is_in_stock": true,
+        "selling_price": 245,
+        "mrp": 270,
+        "product_id": "prod_001",
+        "unit_size": "5 kg",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 178000000
+        },
+        "category": "groceries",
+        "is_active": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "discount_percent": 9
+      },
+      {
+        "id": "prod_002",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 179000000
+        },
+        "product_id": "prod_002",
+        "name": "Aashirvaad Shudh Chakki Atta 10kg",
+        "image_url": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80",
+        "selling_price": 465,
+        "mrp": 510,
+        "category": "groceries",
+        "tags": [
+          "Daily Essential"
+        ],
+        "name_localized": "आशीर्वाद आटा 10 किलो",
+        "unit_size": "10 kg",
+        "discount_percent": 9,
+        "is_active": true,
+        "is_in_stock": true
+      },
+      {
+        "id": "prod_003",
+        "is_in_stock": true,
+        "mrp": 250,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 179000000
+        },
+        "image_url": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80",
+        "product_id": "prod_003",
+        "name": "Fortune Chakki Fresh Atta",
+        "name_localized": "फॉर्च्यून चक्की आटा",
+        "category": "groceries",
+        "is_active": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "discount_percent": 10,
+        "selling_price": 225,
+        "unit_size": "5 kg"
+      },
+      {
+        "id": "prod_004",
+        "name": "India Gate Basmati Rice Rozzana",
+        "discount_percent": 21,
+        "unit_size": "1 kg",
+        "is_in_stock": true,
+        "is_active": true,
+        "selling_price": 99,
+        "category": "groceries",
+        "name_localized": "इंडिया गेट बासमती चावल",
+        "tags": [
+          "Daily Essential"
+        ],
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 179000000
+        },
+        "mrp": 125,
+        "product_id": "prod_004",
+        "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80"
+      },
+      {
+        "id": "prod_005",
+        "name_localized": "इंडिया गेट दावत चावल",
+        "discount_percent": 19,
+        "tags": [
+          "Daily Essential"
+        ],
+        "mrp": 599,
+        "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+        "selling_price": 485,
+        "is_in_stock": true,
+        "category": "groceries",
+        "name": "India Gate Basmati Rice Feast",
+        "is_active": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 179000000
+        },
+        "unit_size": "5 kg",
+        "product_id": "prod_005"
+      },
+      {
+        "id": "prod_006",
+        "tags": [
+          "Daily Essential"
+        ],
+        "category": "groceries",
+        "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+        "name_localized": "दावत बासमती चावल",
+        "mrp": 480,
+        "discount_percent": 17,
+        "name": "Daawat Rozana Gold Basmati Rice",
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 179000000
+        },
+        "unit_size": "5 kg",
+        "selling_price": 399,
+        "product_id": "prod_006",
+        "is_active": true
+      },
+      {
+        "id": "prod_007",
+        "is_active": true,
+        "product_id": "prod_007",
+        "unit_size": "1 kg",
+        "name": "Tata Sampann Unpolished Toor Dal",
+        "mrp": 195,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 179000000
+        },
+        "discount_percent": 14,
+        "selling_price": 168,
+        "name_localized": "टाटा संपन्न अरहर दाल",
+        "image_url": "https://images.unsplash.com/photo-1585994192700-0df15c61266e?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "category": "groceries"
+      },
+      {
+        "id": "prod_008",
+        "unit_size": "1 kg",
+        "selling_price": 149,
+        "name_localized": "टाटा मूंग दाल धुली",
+        "product_id": "prod_008",
+        "is_active": true,
+        "discount_percent": 15,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 179000000
+        },
+        "category": "groceries",
+        "mrp": 175,
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "image_url": "https://images.unsplash.com/photo-1585994192700-0df15c61266e?w=500&q=80",
+        "name": "Tata Sampann Moong Dal Dhuli"
+      },
+      {
+        "id": "prod_009",
+        "mrp": 140,
+        "name": "Tata Sampann Chana Dal",
+        "is_active": true,
+        "unit_size": "1 kg",
+        "tags": [
+          "Daily Essential"
+        ],
+        "discount_percent": 15,
+        "category": "groceries",
+        "product_id": "prod_009",
+        "image_url": "https://images.unsplash.com/photo-1585994192700-0df15c61266e?w=500&q=80",
+        "name_localized": "टाटा चना दाल",
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 179000000
+        },
+        "selling_price": 119
+      },
+      {
+        "id": "prod_010",
+        "mrp": 180,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "product_id": "prod_010",
+        "name": "Tata Sampann Urad Dal Chilka",
+        "discount_percent": 14,
+        "name_localized": "टाटा उड़द दाल छिलका",
+        "image_url": "https://images.unsplash.com/photo-1585994192700-0df15c61266e?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "unit_size": "1 kg",
+        "selling_price": 155,
+        "category": "groceries",
+        "is_active": true
+      },
+      {
+        "id": "prod_011",
+        "name": "Rajma Chitra Kashmiri",
+        "is_active": true,
+        "unit_size": "1 kg",
+        "name_localized": "राजमा चित्रा",
+        "discount_percent": 15,
+        "is_in_stock": true,
+        "mrp": 210,
+        "selling_price": 179,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "image_url": "https://images.unsplash.com/photo-1585994192700-0df15c61266e?w=500&q=80",
+        "product_id": "prod_011",
+        "tags": [
+          "Daily Essential"
+        ],
+        "category": "groceries"
+      },
+      {
+        "id": "prod_012",
+        "product_id": "prod_012",
+        "name_localized": "सफेद छोले / काबुली चना",
+        "tags": [
+          "Daily Essential"
+        ],
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "discount_percent": 16,
+        "is_active": true,
+        "unit_size": "1 kg",
+        "name": "Kabuli Chana Premium",
+        "category": "groceries",
+        "is_in_stock": true,
+        "image_url": "https://images.unsplash.com/photo-1585994192700-0df15c61266e?w=500&q=80",
+        "mrp": 190,
+        "selling_price": 159
+      },
+      {
+        "id": "prod_013",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "selling_price": 138,
+        "category": "groceries",
+        "name_localized": "फॉर्च्यून सूरजमुखी तेल",
+        "product_id": "prod_013",
+        "is_active": true,
+        "name": "Fortune Sunlite Refined Sunflower Oil",
+        "discount_percent": 14,
+        "unit_size": "1 L",
+        "is_in_stock": true,
+        "mrp": 160,
+        "image_url": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ]
+      },
+      {
+        "id": "prod_014",
+        "is_in_stock": true,
+        "selling_price": 152,
+        "mrp": 175,
+        "discount_percent": 13,
+        "tags": [
+          "Daily Essential"
+        ],
+        "image_url": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+        "name_localized": "धारा सरसों का तेल",
+        "unit_size": "1 L",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "category": "groceries",
+        "name": "Dhara Kachi Ghani Mustard Oil",
+        "product_id": "prod_014",
+        "is_active": true
+      },
+      {
+        "id": "prod_015",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "discount_percent": 13,
+        "product_id": "prod_015",
+        "unit_size": "1 L",
+        "name": "Saffola Gold Pro Healthy Blend Oil",
+        "category": "groceries",
+        "is_active": true,
+        "selling_price": 169,
+        "is_in_stock": true,
+        "image_url": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+        "mrp": 195,
+        "name_localized": "सफोला गोल्ड तेल",
+        "tags": [
+          "Daily Essential"
+        ]
+      },
+      {
+        "id": "prod_016",
+        "category": "groceries",
+        "image_url": "https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=500&q=80",
+        "selling_price": 585,
+        "name": "Amul Pure Cow Ghee Pouch",
+        "discount_percent": 10,
+        "product_id": "prod_016",
+        "mrp": 650,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "is_active": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "unit_size": "1 L",
+        "is_in_stock": true,
+        "name_localized": "अमुल गाय का शुद्ध घी"
+      },
+      {
+        "id": "prod_017",
+        "name": "Patanjali Cow Ghee Tin",
+        "image_url": "https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=500&q=80",
+        "category": "groceries",
+        "name_localized": "पतंजलि गाय का घी",
+        "is_active": true,
+        "product_id": "prod_017",
+        "unit_size": "500 ml",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "mrp": 330,
+        "discount_percent": 8,
+        "selling_price": 305
+      },
+      {
+        "id": "prod_018",
+        "name_localized": "टाटा नमक आयोडीन",
+        "category": "groceries",
+        "name": "Tata Salt Vacuum Evaporated",
+        "image_url": "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80",
+        "selling_price": 28,
+        "product_id": "prod_018",
+        "mrp": 30,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "discount_percent": 7,
+        "tags": [
+          "Daily Essential"
+        ],
+        "unit_size": "1 kg",
+        "is_in_stock": true,
+        "is_active": true
+      },
+      {
+        "id": "prod_019",
+        "mrp": 45,
+        "discount_percent": 11,
+        "is_active": true,
+        "unit_size": "1 kg",
+        "name": "Tata Salt Lite Low Sodium",
+        "name_localized": "टाटा नमक लाइट",
+        "is_in_stock": true,
+        "image_url": "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ],
+        "product_id": "prod_019",
+        "category": "groceries",
+        "selling_price": 40,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        }
+      },
+      {
+        "id": "prod_020",
+        "mrp": 45,
+        "image_url": "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80",
+        "name_localized": "कैच टेबल सॉल्ट",
+        "tags": [
+          "Daily Essential"
+        ],
+        "product_id": "prod_020",
+        "is_active": true,
+        "unit_size": "200 g",
+        "category": "groceries",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "discount_percent": 13,
+        "name": "Catch Table Salt Sprinkler",
+        "is_in_stock": true,
+        "selling_price": 39
+      },
+      {
+        "id": "prod_021",
+        "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+        "discount_percent": 13,
+        "tags": [
+          "Daily Essential"
+        ],
+        "name_localized": "एवरेस्ट हल्दी पाउडर",
+        "category": "groceries",
+        "mrp": 78,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "name": "Everest Turmeric Powder Haldi",
+        "unit_size": "200 g",
+        "product_id": "prod_021",
+        "is_active": true,
+        "selling_price": 68,
+        "is_in_stock": true
+      },
+      {
+        "id": "prod_022",
+        "product_id": "prod_022",
+        "unit_size": "200 g",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "discount_percent": 14,
+        "is_active": true,
+        "category": "groceries",
+        "mrp": 125,
+        "name": "Everest Tikhalal Red Chilli Powder",
+        "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+        "selling_price": 108,
+        "name_localized": "एवरेस्ट तीखालाल मिर्च"
+      },
+      {
+        "id": "prod_023",
+        "product_id": "prod_023",
+        "name_localized": "एवरेस्ट धनिया पाउडर",
+        "unit_size": "200 g",
+        "is_active": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "mrp": 72,
+        "tags": [
+          "Daily Essential"
+        ],
+        "selling_price": 62,
+        "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+        "category": "groceries",
+        "name": "Everest Coriander Powder Dhaniya",
+        "discount_percent": 14,
+        "is_in_stock": true
+      },
+      {
+        "id": "prod_024",
+        "tags": [
+          "Daily Essential"
+        ],
+        "product_id": "prod_024",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "name_localized": "एवरेस्ट गरम मसाला",
+        "is_active": true,
+        "category": "groceries",
+        "unit_size": "100 g",
+        "mrp": 94,
+        "name": "Everest Garam Masala",
+        "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+        "discount_percent": 13,
+        "is_in_stock": true,
+        "selling_price": 82
+      },
+      {
+        "id": "prod_025",
+        "selling_price": 95,
+        "unit_size": "100 g",
+        "is_in_stock": true,
+        "is_active": true,
+        "name": "Catch Black Pepper Sprinkler",
+        "discount_percent": 14,
+        "name_localized": "कैच काली मिर्च",
+        "product_id": "prod_025",
+        "category": "groceries",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+        "mrp": 110,
+        "tags": [
+          "Daily Essential"
+        ]
+      },
+      {
+        "id": "prod_026",
+        "discount_percent": 13,
+        "unit_size": "100 g",
+        "is_in_stock": true,
+        "is_active": true,
+        "name_localized": "साबुत जीरा",
+        "category": "groceries",
+        "tags": [
+          "Daily Essential"
+        ],
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+        "selling_price": 74,
+        "product_id": "prod_026",
+        "name": "Catch Jeera Cumin Seeds Whole",
+        "mrp": 85
+      },
+      {
+        "id": "prod_027",
+        "name_localized": "एमडीएच असली हींग",
+        "unit_size": "50 g",
+        "is_in_stock": true,
+        "is_active": true,
+        "name": "MDH Hing Compounded Asafoetida",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+        "selling_price": 102,
+        "product_id": "prod_027",
+        "discount_percent": 11,
+        "mrp": 115,
+        "category": "groceries",
+        "tags": [
+          "Daily Essential"
+        ]
+      },
+      {
+        "id": "prod_028",
+        "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+        "is_in_stock": true,
+        "selling_price": 27,
+        "name": "Amul Taaza Toned Fresh Milk",
+        "name_localized": "अमुल ताज़ा दूध",
+        "mrp": 27,
+        "is_active": true,
+        "category": "dairy",
+        "product_id": "prod_028",
+        "discount_percent": 0,
+        "unit_size": "500 ml",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "tags": [
+          "Daily Essential"
+        ]
+      },
+      {
+        "id": "prod_029",
+        "is_in_stock": true,
+        "category": "dairy",
+        "selling_price": 33,
+        "mrp": 33,
+        "discount_percent": 0,
+        "unit_size": "500 ml",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_active": true,
+        "product_id": "prod_029",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "name": "Amul Gold Full Cream Fresh Milk",
+        "name_localized": "अमुल गोल्ड फुल क्रीम दूध",
+        "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80"
+      },
+      {
+        "id": "prod_030",
+        "product_id": "prod_030",
+        "is_in_stock": true,
+        "name_localized": "मदर डेयरी दूध",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "name": "Mother Dairy Toned Milk",
+        "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ],
+        "mrp": 27,
+        "unit_size": "500 ml",
+        "discount_percent": 0,
+        "is_active": true,
+        "selling_price": 27,
+        "category": "dairy"
+      },
+      {
+        "id": "prod_031",
+        "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+        "discount_percent": 7,
+        "selling_price": 42,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "mrp": 45,
+        "tags": [
+          "Daily Essential"
+        ],
+        "product_id": "prod_031",
+        "is_active": true,
+        "category": "dairy",
+        "is_in_stock": true,
+        "unit_size": "400 g",
+        "name": "Harvest Gold White Sandwich Bread",
+        "name_localized": "हार्वेस्ट गोल्ड सफेद ब्रेड"
+      },
+      {
+        "id": "prod_032",
+        "tags": [
+          "Daily Essential"
+        ],
+        "discount_percent": 9,
+        "mrp": 55,
+        "is_active": true,
+        "category": "dairy",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "is_in_stock": true,
+        "selling_price": 50,
+        "unit_size": "400 g",
+        "product_id": "prod_032",
+        "name": "Harvest Gold 100% Atta Brown Bread",
+        "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+        "name_localized": "ब्राउन ब्रेड आटा"
+      },
+      {
+        "id": "prod_033",
+        "unit_size": "100 g",
+        "category": "dairy",
+        "mrp": 60,
+        "is_active": true,
+        "is_in_stock": true,
+        "selling_price": 56,
+        "name_localized": "अमुल मक्खन नमकीन",
+        "name": "Amul Salted Butter",
+        "image_url": "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=500&q=80",
+        "product_id": "prod_033",
+        "tags": [
+          "Daily Essential"
+        ],
+        "discount_percent": 7,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        }
+      },
+      {
+        "id": "prod_034",
+        "image_url": "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=500&q=80",
+        "discount_percent": 7,
+        "mrp": 285,
+        "product_id": "prod_034",
+        "is_in_stock": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "unit_size": "500 g",
+        "category": "dairy",
+        "selling_price": 265,
+        "is_active": true,
+        "name": "Amul Salted Butter 500g",
+        "name_localized": "अमुल बटर 500 ग्राम"
+      },
+      {
+        "id": "prod_035",
+        "is_in_stock": true,
+        "selling_price": 128,
+        "image_url": "https://images.unsplash.com/photo-1552767059-ce182ead6c1b?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ],
+        "discount_percent": 9,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "mrp": 140,
+        "name_localized": "अमुल चीज़ क्यूब्स",
+        "product_id": "prod_035",
+        "name": "Amul Processed Cheese Cubes",
+        "unit_size": "200 g",
+        "is_active": true,
+        "category": "dairy"
+      },
+      {
+        "id": "prod_036",
+        "discount_percent": 7,
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_active": true,
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "product_id": "prod_036",
+        "unit_size": "200 g",
+        "selling_price": 88,
+        "mrp": 95,
+        "category": "dairy",
+        "name": "Mother Dairy Malai Paneer",
+        "name_localized": "मदर डेयरी मलाई पनीर",
+        "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80"
+      },
+      {
+        "id": "prod_037",
+        "is_in_stock": true,
+        "product_id": "prod_037",
+        "is_active": true,
+        "unit_size": "400 g",
+        "mrp": 35,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "selling_price": 33,
+        "name": "Amul Masti Dahi Pouch",
+        "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ],
+        "name_localized": "अमुल मस्ती ताज़ा दही",
+        "discount_percent": 6,
+        "category": "dairy"
+      },
+      {
+        "id": "prod_038",
+        "unit_size": "Pack of 4",
+        "is_in_stock": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "selling_price": 54,
+        "is_active": true,
+        "product_id": "prod_038",
+        "discount_percent": 10,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "category": "instant-food",
+        "name_localized": "मैगी मसाला नूडल्स 4 पैक",
+        "name": "Maggi 2-Minute Masala Noodles Pack of 4",
+        "image_url": "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=500&q=80",
+        "mrp": 60
+      },
+      {
+        "id": "prod_039",
+        "product_id": "prod_039",
+        "category": "instant-food",
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "image_url": "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=500&q=80",
+        "discount_percent": 13,
+        "tags": [
+          "Daily Essential"
+        ],
+        "unit_size": "Pack of 8",
+        "name_localized": "मैगी मसाला नूडल्स 8 पैक",
+        "is_active": true,
+        "mrp": 120,
+        "name": "Maggi 2-Minute Masala Noodles Pack of 8",
+        "selling_price": 105
+      },
+      {
+        "id": "prod_040",
+        "mrp": 56,
+        "name": "Sunfeast Yippee Magic Masala Noodles",
+        "image_url": "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=500&q=80",
+        "category": "instant-food",
+        "tags": [
+          "Daily Essential"
+        ],
+        "name_localized": "सनफीस्ट यिप्पी नूडल्स",
+        "selling_price": 49,
+        "unit_size": "Pack of 4",
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "is_active": true,
+        "product_id": "prod_040",
+        "discount_percent": 13
+      },
+      {
+        "id": "prod_041",
+        "is_active": true,
+        "name": "Knorr Classic Thick Tomato Soup",
+        "is_in_stock": true,
+        "unit_size": "53 g",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "selling_price": 58,
+        "product_id": "prod_041",
+        "discount_percent": 11,
+        "image_url": "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=500&q=80",
+        "category": "instant-food",
+        "name_localized": "क्नॉर टमाटर सूप",
+        "tags": [
+          "Daily Essential"
+        ],
+        "mrp": 65
+      },
+      {
+        "id": "prod_042",
+        "unit_size": "250 g",
+        "is_active": true,
+        "product_id": "prod_042",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "selling_price": 78,
+        "image_url": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80",
+        "discount_percent": 13,
+        "name": "Chings Secret Schezwan Chutney",
+        "mrp": 90,
+        "category": "instant-food",
+        "name_localized": "चिंग्स शेज़वान चटनी"
+      },
+      {
+        "id": "prod_043",
+        "mrp": 320,
+        "name": "Tata Tea Gold Leaf Blend",
+        "is_in_stock": true,
+        "selling_price": 275,
+        "name_localized": "टाटा टी गोल्ड पत्ती चाय",
+        "image_url": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500&q=80",
+        "discount_percent": 14,
+        "tags": [
+          "Daily Essential"
+        ],
+        "unit_size": "500 g",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "is_active": true,
+        "category": "beverages",
+        "product_id": "prod_043"
+      },
+      {
+        "id": "prod_044",
+        "is_in_stock": true,
+        "unit_size": "500 g",
+        "is_active": true,
+        "mrp": 290,
+        "name": "Brooke Bond Red Label Tea",
+        "selling_price": 255,
+        "category": "beverages",
+        "image_url": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500&q=80",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "discount_percent": 12,
+        "tags": [
+          "Daily Essential"
+        ],
+        "product_id": "prod_044",
+        "name_localized": "रेड लेबल चाय"
+      },
+      {
+        "id": "prod_045",
+        "product_id": "prod_045",
+        "discount_percent": 11,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "mrp": 220,
+        "tags": [
+          "Daily Essential"
+        ],
+        "image_url": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500&q=80",
+        "category": "beverages",
+        "selling_price": 195,
+        "is_in_stock": true,
+        "unit_size": "250 g",
+        "name_localized": "ताज महल कड़क चाय",
+        "name": "Taj Mahal Classic Tea",
+        "is_active": true
+      },
+      {
+        "id": "prod_046",
+        "is_in_stock": true,
+        "selling_price": 175,
+        "name_localized": "नेस्कैफे क्लासिक कॉफ़ी",
+        "name": "Nescafe Classic 100% Pure Coffee",
+        "image_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=500&q=80",
+        "discount_percent": 10,
+        "category": "beverages",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "unit_size": "50 g",
+        "product_id": "prod_046",
+        "is_active": true,
+        "mrp": 195,
+        "tags": [
+          "Daily Essential"
+        ]
+      },
+      {
+        "id": "prod_047",
+        "name_localized": "ब्रू इंस्टेंट कॉफ़ी",
+        "image_url": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=500&q=80",
+        "category": "beverages",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "mrp": 230,
+        "selling_price": 205,
+        "discount_percent": 11,
+        "name": "BRU Instant Coffee Jar",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "is_active": true,
+        "unit_size": "100 g",
+        "product_id": "prod_047"
+      },
+      {
+        "id": "prod_048",
+        "selling_price": 219,
+        "mrp": 245,
+        "name": "Cadbury Bournvita Chocolate Health Drink",
+        "name_localized": "बोर्नविटा हेल्थ ड्रिंक",
+        "is_active": true,
+        "unit_size": "500 g",
+        "is_in_stock": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "category": "beverages",
+        "discount_percent": 11,
+        "product_id": "prod_048",
+        "image_url": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        }
+      },
+      {
+        "id": "prod_049",
+        "name": "Parle-G Gold Gluco Biscuits",
+        "selling_price": 78,
+        "unit_size": "800 g",
+        "discount_percent": 13,
+        "is_active": true,
+        "category": "snacks",
+        "is_in_stock": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "mrp": 90,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "product_id": "prod_049",
+        "name_localized": "पारले-जी गोल्ड बिस्कुट",
+        "image_url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80"
+      },
+      {
+        "id": "prod_050",
+        "is_in_stock": true,
+        "image_url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+        "product_id": "prod_050",
+        "name": "Britannia Good Day Butter Cookies",
+        "name_localized": "गुड डे बटर कुकीज़",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "discount_percent": 17,
+        "mrp": 150,
+        "is_active": true,
+        "selling_price": 125,
+        "tags": [
+          "Daily Essential"
+        ],
+        "category": "snacks",
+        "unit_size": "600 g"
+      },
+      {
+        "id": "prod_051",
+        "is_in_stock": true,
+        "discount_percent": 13,
+        "tags": [
+          "Daily Essential"
+        ],
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "unit_size": "300 g",
+        "category": "snacks",
+        "product_id": "prod_051",
+        "is_active": true,
+        "name_localized": "ब्रिटानिया मैरी गोल्ड",
+        "name": "Britannia Marie Gold Tea Biscuits",
+        "mrp": 45,
+        "image_url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+        "selling_price": 39
+      },
+      {
+        "id": "prod_052",
+        "selling_price": 35,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 180000000
+        },
+        "product_id": "prod_052",
+        "is_active": true,
+        "is_in_stock": true,
+        "unit_size": "120 g",
+        "name": "Cadbury Oreo Vanilla Creme Biscuits",
+        "discount_percent": 13,
+        "mrp": 40,
+        "name_localized": "ओरियो बिस्कुट क्रीम",
+        "image_url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+        "category": "snacks",
+        "tags": [
+          "Daily Essential"
+        ]
+      },
+      {
+        "id": "prod_053",
+        "discount_percent": 13,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "category": "snacks",
+        "tags": [
+          "Daily Essential"
+        ],
+        "image_url": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
+        "product_id": "prod_053",
+        "is_in_stock": true,
+        "name_localized": "हल्दीराम आलू भुजिया",
+        "mrp": 120,
+        "unit_size": "400 g",
+        "is_active": true,
+        "selling_price": 105,
+        "name": "Haldiram Nagpur Aloo Bhujia"
+      },
+      {
+        "id": "prod_054",
+        "unit_size": "400 g",
+        "discount_percent": 14,
+        "is_active": true,
+        "name": "Haldiram Khatta Meetha Mixture",
+        "category": "snacks",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "mrp": 115,
+        "image_url": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
+        "product_id": "prod_054",
+        "selling_price": 99,
+        "name_localized": "हल्दीराम खट्टा मीठा नमकीन",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        }
+      },
+      {
+        "id": "prod_055",
+        "unit_size": "50 g",
+        "product_id": "prod_055",
+        "selling_price": 19,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "is_active": true,
+        "discount_percent": 5,
+        "category": "snacks",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "image_url": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
+        "name": "Lays Classic Salted Potato Chips",
+        "name_localized": "लेज़ नमकीन चिप्स",
+        "mrp": 20
+      },
+      {
+        "id": "prod_056",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "product_id": "prod_056",
+        "name": "Kurkure Masala Munch",
+        "is_active": true,
+        "selling_price": 19,
+        "unit_size": "90 g",
+        "category": "snacks",
+        "discount_percent": 5,
+        "image_url": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
+        "mrp": 20,
+        "name_localized": "कुरकुरे मसाला मंच",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true
+      },
+      {
+        "id": "prod_057",
+        "category": "household",
+        "is_active": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "tags": [
+          "Daily Essential"
+        ],
+        "unit_size": "1 kg",
+        "is_in_stock": true,
+        "product_id": "prod_057",
+        "name_localized": "सर्फ एक्सेल पाउडर",
+        "discount_percent": 12,
+        "selling_price": 128,
+        "image_url": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
+        "name": "Surf Excel Easy Wash Detergent Powder",
+        "mrp": 145
+      },
+      {
+        "id": "prod_058",
+        "tags": [
+          "Daily Essential"
+        ],
+        "category": "household",
+        "mrp": 240,
+        "selling_price": 209,
+        "is_active": true,
+        "discount_percent": 13,
+        "unit_size": "1 kg",
+        "name": "Ariel Matic Front & Top Load Powder",
+        "is_in_stock": true,
+        "image_url": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
+        "product_id": "prod_058",
+        "name_localized": "एरियल मैटिक डिटर्जेंट",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        }
+      },
+      {
+        "id": "prod_059",
+        "unit_size": "Pack of 4",
+        "is_active": true,
+        "selling_price": 45,
+        "discount_percent": 10,
+        "mrp": 50,
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true,
+        "category": "household",
+        "image_url": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "name": "Rin Detergent Bar Pack of 4",
+        "product_id": "prod_059",
+        "name_localized": "रिन साबुन 4 पीस"
+      },
+      {
+        "id": "prod_060",
+        "discount_percent": 12,
+        "unit_size": "500 ml",
+        "name": "Vim Dishwash Gel Lemon Bottle",
+        "mrp": 130,
+        "is_active": true,
+        "name_localized": "विम जेल बर्तन धोने का",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "is_in_stock": true,
+        "product_id": "prod_060",
+        "category": "household",
+        "selling_price": 115,
+        "tags": [
+          "Daily Essential"
+        ],
+        "image_url": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80"
+      },
+      {
+        "id": "prod_061",
+        "is_in_stock": true,
+        "discount_percent": 14,
+        "name": "Vim Dishwash Bar with Polycoat",
+        "category": "household",
+        "image_url": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
+        "name_localized": "विम टिकिया बर्तन",
+        "product_id": "prod_061",
+        "selling_price": 30,
+        "unit_size": "300 g",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "is_active": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "mrp": 35
+      },
+      {
+        "id": "prod_062",
+        "discount_percent": 10,
+        "unit_size": "500 ml",
+        "name": "Harpic Power Plus Toilet Cleaner Original",
+        "is_in_stock": true,
+        "is_active": true,
+        "mrp": 105,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "selling_price": 94,
+        "product_id": "prod_062",
+        "category": "household",
+        "image_url": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ],
+        "name_localized": "हार्पिक टॉयलेट क्लीनर"
+      },
+      {
+        "id": "prod_063",
+        "product_id": "prod_063",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "category": "household",
+        "tags": [
+          "Daily Essential"
+        ],
+        "image_url": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
+        "discount_percent": 11,
+        "selling_price": 102,
+        "is_in_stock": true,
+        "mrp": 115,
+        "is_active": true,
+        "name_localized": "कॉलिन ग्लास क्लीनर",
+        "unit_size": "500 ml",
+        "name": "Colin Glass and Household Cleaner"
+      },
+      {
+        "id": "prod_064",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "tags": [
+          "Daily Essential"
+        ],
+        "selling_price": 139,
+        "is_in_stock": true,
+        "product_id": "prod_064",
+        "image_url": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
+        "discount_percent": 13,
+        "category": "household",
+        "name_localized": "गुड नाइट मच्छर भगाने की रिफिल",
+        "mrp": 160,
+        "name": "Good Knight Gold Flash Liquid Refill",
+        "is_active": true,
+        "unit_size": "Pack of 2"
+      },
+      {
+        "id": "prod_065",
+        "name_localized": "डेटॉल ओरिजिनल साबुन",
+        "discount_percent": 11,
+        "category": "personal-care",
+        "tags": [
+          "Daily Essential"
+        ],
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "selling_price": 129,
+        "product_id": "prod_065",
+        "image_url": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80",
+        "mrp": 145,
+        "is_in_stock": true,
+        "unit_size": "Pack of 3",
+        "name": "Dettol Original Bathing Soap Pack of 3",
+        "is_active": true
+      },
+      {
+        "id": "prod_066",
+        "name": "Lifebuoy Total 10 Germ Protection Soap",
+        "discount_percent": 13,
+        "image_url": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "is_in_stock": true,
+        "product_id": "prod_066",
+        "unit_size": "Pack of 4",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_active": true,
+        "mrp": 120,
+        "category": "personal-care",
+        "selling_price": 105,
+        "name_localized": "लाइफबॉय साबुन"
+      },
+      {
+        "id": "prod_067",
+        "discount_percent": 9,
+        "product_id": "prod_067",
+        "mrp": 75,
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "selling_price": 68,
+        "image_url": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80",
+        "name": "Dove Cream Beauty Bathing Bar",
+        "name_localized": "डव क्रीम सोप",
+        "is_active": true,
+        "tags": [
+          "Daily Essential"
+        ],
+        "category": "personal-care",
+        "unit_size": "100 g"
+      },
+      {
+        "id": "prod_068",
+        "name_localized": "कोलगेट टूथपेस्ट",
+        "is_active": true,
+        "unit_size": "200 g",
+        "mrp": 130,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "product_id": "prod_068",
+        "discount_percent": 14,
+        "name": "Colgate Strong Teeth Toothpaste",
+        "selling_price": 112,
+        "image_url": "https://images.unsplash.com/photo-1559591937-e10323389658?w=500&q=80",
+        "category": "personal-care",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_in_stock": true
+      },
+      {
+        "id": "prod_069",
+        "tags": [
+          "Daily Essential"
+        ],
+        "is_active": true,
+        "unit_size": "75 g",
+        "is_in_stock": true,
+        "discount_percent": 11,
+        "product_id": "prod_069",
+        "name_localized": "सेंसोडाइन टूथपेस्ट",
+        "name": "Sensodyne Fresh Gel Sensitive Teeth",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "image_url": "https://images.unsplash.com/photo-1559591937-e10323389658?w=500&q=80",
+        "mrp": 160,
+        "category": "personal-care",
+        "selling_price": 142
+      },
+      {
+        "id": "prod_070",
+        "is_active": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "category": "personal-care",
+        "unit_size": "340 ml",
+        "product_id": "prod_070",
+        "name": "Clinic Plus Strong & Long Shampoo",
+        "is_in_stock": true,
+        "image_url": "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500&q=80",
+        "tags": [
+          "Daily Essential"
+        ],
+        "mrp": 220,
+        "discount_percent": 13,
+        "selling_price": 192,
+        "name_localized": "क्लिनिक प्लस शैम्पू"
+      },
+      {
+        "id": "prod_071",
+        "name_localized": "हेड एंड शोल्डर्स शैम्पू",
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "unit_size": "180 ml",
+        "tags": [
+          "Daily Essential"
+        ],
+        "product_id": "prod_071",
+        "selling_price": 165,
+        "is_in_stock": true,
+        "is_active": true,
+        "discount_percent": 13,
+        "mrp": 190,
+        "name": "Head & Shoulders Anti-Dandruff Shampoo",
+        "category": "personal-care",
+        "image_url": "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500&q=80"
+      },
+      {
+        "id": "prod_072",
+        "name_localized": "पैराशूट नारियल तेल",
+        "mrp": 115,
+        "product_id": "prod_072",
+        "image_url": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
+        "is_in_stock": true,
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789324781,
+          "nanoseconds": 181000000
+        },
+        "name": "Parachute 100% Pure Coconut Hair Oil",
+        "is_active": true,
+        "unit_size": "250 ml",
+        "discount_percent": 11,
+        "category": "personal-care",
+        "tags": [
+          "Daily Essential"
+        ],
+        "selling_price": 102
+      }
+    ],
+    "orders": [
+      {
+        "id": "ORD-2159",
+        "customer_uid": "user_1",
+        "customer_phone": "+919876543210",
+        "delivery_fee": 0,
+        "transaction_ref": "UPI-1789325249754",
+        "updated_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789325325,
+          "nanoseconds": 750000000
+        },
+        "created_at": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1789325252,
+          "nanoseconds": 702000000
+        },
+        "order_id": "#ORD-2159",
+        "delivery_address": {
+          "latitude": 28.6139,
+          "userId": "user_1",
+          "longitude": 77.209,
+          "pincode": "110001",
+          "isDefault": true,
+          "streetAddress": "Flat 302, Green Valley Apartments, Pocket 2",
+          "label": "Home",
+          "landmark": "Near Community Park Gate 1",
+          "id": "addr_1"
+        },
+        "items": [
+          {
+            "unit_size": "500 ml",
+            "selling_price": 27,
+            "product_id": "prod_3",
+            "subtotal": 270,
+            "name": "Amul Taaza Toned Fresh Milk",
+            "quantity": 10,
+            "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80"
+          }
+        ],
+        "discount_amount": 0,
+        "status": "DELIVERED",
+        "payment_status": "COMPLETED",
+        "delivery_partner": {
+          "name": "Ramesh (Delivery Partner)",
+          "phone": "+919876001122"
+        },
+        "item_total": 270,
+        "payment_method": "UPI",
+        "status_timeline": [
+          {
+            "status": "RECEIVED",
+            "timestamp": "2026-09-13T18:47:30.534Z",
+            "note": "Order placed by customer via mobile app"
+          },
+          {
+            "note": "Shopkeeper accepted & started packing",
+            "status": "PREPARING",
+            "timestamp": "2026-09-13T18:48:11.960Z"
+          },
+          {
+            "note": "Dispatched with delivery partner",
+            "status": "OUT_FOR_DELIVERY",
+            "timestamp": "2026-09-13T18:48:36.735Z"
+          },
+          {
+            "status": "DELIVERED",
+            "note": "Delivered safely at doorstep",
+            "timestamp": "2026-09-13T18:48:45.814Z"
+          }
+        ],
+        "customer_name": "Rohit Kumar",
+        "final_total": 270,
+        "total_amount": 270
+      }
+    ],
+    "users": [],
+    "store_config": []
+  }
+}
