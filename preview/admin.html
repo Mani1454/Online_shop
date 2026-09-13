@@ -273,6 +273,25 @@
           image: newProdImage
         };
 
+        if (firebaseDb) {
+          try {
+            firebaseDb.collection('products').doc(newId).set({
+              product_id: newId,
+              name: created.name,
+              name_localized: created.localized,
+              category: created.category,
+              unit_size: created.unit,
+              mrp: created.mrp,
+              selling_price: created.price,
+              is_in_stock: true,
+              image_url: created.image,
+              created_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          } catch (e) {
+            console.warn('Firestore add product note:', e.message);
+          }
+        }
+
         setProducts(prev => [created, ...prev]);
         setShowAddModal(false);
         alert(`✅ "${created.name}" added to counter catalog successfully!`);
@@ -407,9 +426,55 @@
         setCheckedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
       };
 
+      // Real-Time Firestore Products Sync
+      useEffect(() => {
+        if (!firebaseDb) return;
+        let unsub = null;
+        try {
+          unsub = firebaseDb.collection('products').onSnapshot(
+            (snapshot) => {
+              if (!snapshot.empty) {
+                const liveProds = snapshot.docs.map(doc => {
+                  const data = doc.data();
+                  return {
+                    id: doc.id,
+                    name: data.name,
+                    localized: data.name_localized || data.name,
+                    unit: data.unit_size || data.unit || '1 unit',
+                    mrp: data.mrp,
+                    price: data.selling_price || data.sellingPrice,
+                    inStock: data.is_in_stock !== false,
+                    image: data.image_url || data.imageUrl,
+                    cat: data.category
+                  };
+                });
+                setProducts(liveProds);
+              }
+            },
+            (err) => console.warn('Products sync note:', err.message)
+          );
+        } catch(e) {
+          console.warn('Products listener note:', e);
+        }
+        return () => { if (unsub) unsub(); };
+      }, []);
+
       // Massive 1-Tap Stock Switch
-      const toggleStock = (prodId) => {
-        setProducts(prev => prev.map(p => p.id === prodId ? { ...p, inStock: !p.inStock } : p));
+      const toggleStock = async (prodId) => {
+        const current = products.find(p => p.id === prodId);
+        const newStock = current ? !current.inStock : false;
+        setProducts(prev => prev.map(p => p.id === prodId ? { ...p, inStock: newStock } : p));
+        if (firebaseDb) {
+          try {
+            await firebaseDb.collection('products').doc(prodId).update({
+              is_in_stock: newStock,
+              updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('✅ Stock updated in Firestore for:', prodId, newStock);
+          } catch(e) {
+            console.warn('Stock update note:', e.message);
+          }
+        }
       };
 
       // Quick Edit Modal
@@ -419,11 +484,23 @@
         setEditPrice(prod.price.toString());
       };
 
-      const saveEditedPrice = () => {
+      const saveEditedPrice = async () => {
         if (!editingProduct) return;
         const newMrp = Number(editMrp) || editingProduct.mrp;
         const newPrice = Number(editPrice) || editingProduct.price;
         setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, mrp: newMrp, price: newPrice } : p));
+        if (firebaseDb) {
+          try {
+            await firebaseDb.collection('products').doc(editingProduct.id).update({
+              mrp: newMrp,
+              selling_price: newPrice,
+              updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('✅ Price updated in Firestore for:', editingProduct.id);
+          } catch(e) {
+            console.warn('Price update note:', e.message);
+          }
+        }
         setEditingProduct(null);
       };
 
