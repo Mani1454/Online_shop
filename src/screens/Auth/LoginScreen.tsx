@@ -233,29 +233,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               )}
             </TouchableOpacity>
 
-            {/* Quick Demo Shortcuts (Only displayed in development/demo mode) */}
-            {!(typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') && (
-              <View style={styles.demoSection}>
-                <Text style={styles.demoLabel}>⚡ Quick Test Shortcuts (Instant Demo)</Text>
-                <View style={styles.demoButtonsRow}>
-                  <TouchableOpacity
-                    style={styles.demoButton}
-                    onPress={() => quickLoginDemo('customer')}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.demoButtonText}>👤 Customer Login</Text>
-                  </TouchableOpacity>
+            {/* Quick Demo Shortcuts for instant 1-tap testing */}
+            <View style={styles.demoSection}>
+              <Text style={styles.demoLabel}>⚡ Quick Test Shortcuts (Instant Demo)</Text>
+              <View style={styles.demoButtonsRow}>
+                <TouchableOpacity
+                  style={styles.demoButton}
+                  onPress={() => quickLoginDemo('customer')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.demoButtonText}>👤 Customer Login</Text>
+                </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={[styles.demoButton, styles.demoAdminButton]}
-                    onPress={() => quickLoginDemo('admin')}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.demoAdminButtonText}>💼 Shopkeeper Login</Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                  style={[styles.demoButton, styles.demoAdminButton]}
+                  onPress={() => quickLoginDemo('admin')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.demoAdminButtonText}>💼 Shopkeeper Login</Text>
+                </TouchableOpacity>
               </View>
-            )}
+            </View>
           </View>
         )}
 
@@ -276,6 +274,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               >
                 <Text style={styles.editPhoneLink}>Change</Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Demo OTP Helper Banner */}
+            <View style={{ backgroundColor: '#ECFDF5', padding: 10, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: '#A7F3D0' }}>
+              <Text style={{ fontSize: 12, color: '#065F46', textAlign: 'center', fontWeight: 'bold' }}>
+                💡 Demo Mode: Enter code 123456 to verify
+              </Text>
             </View>
 
             {/* 6 Auto-Advancing OTP Boxes */}
