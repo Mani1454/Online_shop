@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apna Kirana - Fast Local Delivery</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f19;
+      color: #f8fafc;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.88; transform: scale(1.02); }
+    }
+    .animate-pulse-subtle { animation: pulse-subtle 1.8s infinite ease-in-out; }
+    @keyframes urgent-pulse {
+      0%, 100% { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+      50% { border-color: #b91c1c; box-shadow: 0 0 5px rgba(239, 68, 68, 0.1); }
+    }
+    .urgent-border-pulse { animation: urgent-pulse 1.4s infinite; }
+    @keyframes slide-down {
+      0% { transform: translateY(-100%); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-down { animation: slide-down 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <div id="root" class="flex-1 flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+    // =========================================================================
+    // 1. WEB AUDIO API CHIME SYNTHESIZER
+    // =========================================================================
+    function useAudioChime(shouldRing) {
+      const [isMuted, setIsMuted] = useState(false);
+      const [isRinging, setIsRinging] = useState(false);
+      const audioCtxRef = useRef(null);
+      const timerRef = useRef(null);
+
+      const getCtx = useCallback(() => {
+        if (!audioCtxRef.current) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtxRef.current = new AudioContextClass();
+        }
+        if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
+        return audioCtxRef.current;
+      }, []);
+
+      const playChime = useCallback(() => {
+        if (isMuted) return;
+        const ctx = getCtx();
+        if (!ctx) return;
+        try {
+          const now = ctx.currentTime;
+          // C5 Note
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.frequency.setValueAtTime(523.25, now);
+          gain1.gain.setValueAtTime(0.3, now);
+          gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          osc1.start(now);
+          osc1.stop(now + 0.4);
+
+          // G5 Note delayed
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.frequency.setValueAtTime(783.99, now + 0.13);
+          gain2.gain.setValueAtTime(0.35, now + 0.13);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+          osc2.connect(gain2);
+          gain2.connect(ctx.destination);
+          osc2.start(now + 0.13);
+          osc2.stop(now + 0.65);
+        } catch (e) {}
+      }, [isMuted, getCtx]);
+
+      useEffect(() => {
+        if (shouldRing && !isMuted) {
+          playChime();
+          setIsRinging(true);
+          timerRef.current = setInterval(playChime, 1800);
+        } else {
+          if (timerRef.current) clearInterval(timerRef.current);
+          timerRef.current = null;
+          setIsRinging(false);
+        }
+        return () => {
+          if (timerRef.current) clearInterval(timerRef.current);
+        };
+      }, [shouldRing, isMuted, playChime]);
+
+      return { isRinging, isMuted, toggleMute: () => setIsMuted(m => !m), playChime };
+    }
+
+    // =========================================================================
+    // 2. INITIAL DATABASE SEED
+    // =========================================================================
+    const INITIAL_CATEGORIES = [
+      { id: 'groceries', name: 'Atta, Rice & Dal', localized: 'अनाज व दालें', icon: '🌾', bg: '#FEF3C7' },
+      { id: 'dairy', name: 'Milk & Bread', localized: 'दूध व ब्रेड', icon: '🥛', bg: '#E0F2FE' },
+      { id: 'oils-masalas', name: 'Oil & Spices', localized: 'तेल व मसाले', icon: '🌶️', bg: '#FEE2E2' },
+      { id: 'snacks', name: 'Snacks & Biscuits', localized: 'नमकीन व बिस्कुट', icon: '🍪', bg: '#FFEDD5' },
+      { id: 'beverages', name: 'Tea & Cold Drinks', localized: 'चाय व कोल्ड ड्रिंक्स', icon: '☕', bg: '#DCFCE7' },
+      { id: 'household', name: 'Cleaners & Soaps', localized: 'सफाई का सामान', icon: '🧼', bg: '#F3E8FF' },
+      { id: 'personal-care', name: 'Shampoo & Paste', localized: 'व्यक्तिगत देखभाल', icon: '🧴', bg: '#FCE7F3' },
+      { id: 'instant-food', name: 'Maggi & Noodles', localized: 'मैगी व नूडल्स', icon: '🍜', bg: '#FEF9C3' },
+    ];
+
+    const INITIAL_PRODUCTS = [
+      { id: 'prod-1', categoryId: 'groceries', name: 'Aashirvaad Shudh Chakki Atta', localized: 'आशीर्वाद चक्की आटा', unit: '5 kg', mrp: 270, sellingPrice: 245, isInStock: true, image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80', tags: ['Daily Essential', 'Bestseller'] },
+      { id: 'prod-2', categoryId: 'groceries', name: 'India Gate Basmati Rice Rozzana', localized: 'इंडिया गेट बासमती चावल', unit: '1 kg', mrp: 125, sellingPrice: 99, isInStock: true, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&q=80', tags: ['Daily Essential'] },
+      { id: 'prod-3', categoryId: 'dairy', name: 'Amul Taaza Toned Fresh Milk', localized: 'अमुल ताज़ा दूध', unit: '500 ml', mrp: 27, sellingPrice: 27, isInStock: true, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80', tags: ['Daily Essential'] },
+      { id: 'prod-4', categoryId: 'dairy', name: 'Harvest Gold White Bread', localized: 'सफेद ब्रेड', unit: '400 g', mrp: 45, sellingPrice: 42, isInStock: true, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80', tags: ['Breakfast'] },
+      { id: 'prod-5', categoryId: 'dairy', name: 'Amul Salted Butter', localized: 'अमुल मक्खन', unit: '100 g', mrp: 60, sellingPrice: 56, isInStock: true, image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&q=80', tags: ['Breakfast'] },
+      { id: 'prod-6', categoryId: 'instant-food', name: 'Maggi 2-Minute Masala Noodles', localized: 'मैगी मसाला नूडल्स', unit: 'Pack of 4', mrp: 60, sellingPrice: 54, isInStock: true, image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&q=80', tags: ['Bestseller'] },
+      { id: 'prod-7', categoryId: 'beverages', name: 'Tata Tea Gold Leaf Blend', localized: 'टाटा टी गोल्ड पत्ती चाय', unit: '500 g', mrp: 320, sellingPrice: 275, isInStock: true, image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&q=80', tags: ['Daily Essential'] },
+      { id: 'prod-8', categoryId: 'household', name: 'Surf Excel Easy Wash Powder', localized: 'सर्फ एक्सेल पाउडर', unit: '1 kg', mrp: 145, sellingPrice: 128, isInStock: true, image: 'https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=400&q=80', tags: ['Cleaning'] }
+    ];
+
+    const INITIAL_ORDERS = [
+      {
+        id: '#ORD-1048',
+        customer: 'Mrs. Sharma',
+        phone: '+919811223344',
+        address: 'Flat 302, Green Valley Apartments, Pocket 2',
+        landmark: 'Near Community Center',
+        paymentMethod: 'UPI',
+        isPaid: true,
+        status: 'RECEIVED',
+        createdAt: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+        items: [
+          { name: 'Amul Taaza Toned Fresh Milk', unit: '500 ml', qty: 2, price: 27 },
+          { name: 'Harvest Gold White Bread', unit: '400 g', qty: 1, price: 42 },
+          { name: 'Amul Salted Butter', unit: '100 g', qty: 1, price: 56 }
+        ],
+        itemTotal: 152,
+        deliveryFee: 0,
+        finalTotal: 152
+      },
+      {
+        id: '#ORD-1047',
+        customer: 'Rajesh Kumar',
+        phone: '+919877665544',
+        address: 'House #12, Pocket B, Sector 4',
+        landmark: 'Behind Gurudwara',
+        paymentMethod: 'COD',
+        isPaid: false,
+        status: 'PREPARING',
+        createdAt: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
+        items: [
+          { name: 'Aashirvaad Shudh Chakki Atta', unit: '5 kg', qty: 1, price: 245 },
+          { name: 'Tata Tea Gold Leaf Blend', unit: '500 g', qty: 1, price: 275 }
+        ],
+        itemTotal: 520,
+        deliveryFee: 0,
+        finalTotal: 520
+      },
+      {
+        id: '#ORD-1046',
+        customer: 'Anita Verma',
+        phone: '+919822334455',
+        address: 'B-44, Shivalik Enclave',
+        landmark: 'Near Water Tank',
+        paymentMethod: 'UPI',
+        isPaid: true,
+        status: 'OUT_FOR_DELIVERY',
+        createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+        deliveryPartner: { name: 'Ramesh (Scooter #DL-5S-1029)', phone: '+919876001122' },
+        items: [
+          { name: 'Maggi 2-Minute Masala Noodles', unit: 'Pack of 4', qty: 2, price: 54 }
+        ],
+        itemTotal: 108,
+        deliveryFee: 20,
+        finalTotal: 128
+      }
+    ];
+
+    // =========================================================================
+    // 3. MAIN LIVE DEMO CONTAINER
+    // =========================================================================
+    function LiveDemoApp() {
+      // Shared Real-Time State
+      const [orders, setOrders] = useState(INITIAL_ORDERS);
+      const [products, setProducts] = useState(INITIAL_PRODUCTS);
+      const [storeConfig, setStoreConfig] = useState({
+        isOpen: true,
+        minFreeDelivery: 150,
+        standardFee: 20,
+        storeName: "Apna Kirana & Daily Needs",
+        phone: "+919876543210",
+        vpa: "apnakirana@okaxis"
+      });
+
+      // View Layout Mode ('SPLIT', 'CUSTOMER', 'ADMIN')
+      const [viewMode, setViewMode] = useState('SPLIT');
+
+      // Audio Alert for Admin
+      const unacceptedNewOrders = orders.filter(o => o.status === 'RECEIVED');
+      const shouldRingAdmin = unacceptedNewOrders.length > 0;
+      const { isRinging, isMuted, toggleMute, playChime } = useAudioChime(shouldRingAdmin);
+
+      // Phase 7: Authenticated User State
+      const [authUser, setAuthUser] = useState({
+        uid: 'cust_001',
+        name: 'Mrs. Sharma',
+        phone: '+91 98112 23344',
+        role: 'customer'
+      });
+
+      // Login / OTP Flow Modal State inside Customer Mobile App
+      const [showLoginModal, setShowLoginModal] = useState(false);
+      const [loginStep, setLoginStep] = useState('PHONE'); // 'PHONE' | 'OTP'
+      const [loginPhoneInput, setLoginPhoneInput] = useState('');
+      const [loginPhoneError, setLoginPhoneError] = useState('');
+      const [loginOtpDigits, setLoginOtpDigits] = useState(['', '', '', '', '', '']);
+      const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+      const [otpTimer, setOtpTimer] = useState(30);
+
+      // Phase 7: Push Notifications Toast State
+      const [pushToast, setPushToast] = useState({
+        isVisible: false,
+        title: '',
+        body: '',
+        icon: '🔔'
+      });
+
+      // Phase 9: Observability, Crash Telemetry & Offline Resilience State
+      const [isOfflineSimulated, setIsOfflineSimulated] = useState(false);
+      const [showErrorFallback, setShowErrorFallback] = useState(false);
+      const [showTelemetryModal, setShowTelemetryModal] = useState(false);
+      const [telemetryLogs, setTelemetryLogs] = useState([
+        { type: 'ANALYTICS', event: 'app_initialized', data: { platform: 'web', version: '1.0.0' }, time: 'Just now' },
+        { type: 'CRASHLYTICS', event: 'breadcrumb', data: { category: 'navigation', message: 'Initial Home Screen loaded' }, time: 'Just now' }
+      ]);
+
+      const logTelemetry = (type, event, data) => {
+        // Strict PII Redaction
+        const sanitized = {};
+        for (const [k, v] of Object.entries(data || {})) {
+          if (['phone', 'phoneNumber', 'address', 'vpa'].includes(k)) continue;
+          sanitized[k] = typeof v === 'string' ? v.replace(/(\+91|91)?[6-9]\d{9}/g, '[REDACTED_PHONE]') : v;
+        }
+        setTelemetryLogs(prev => [{
+          type,
+          event,
+          data: sanitized,
+          time: new Date().toLocaleTimeString()
+        }, ...prev.slice(0, 30)]);
+      };
+
+      const otpRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
+
+      // Show Push Notification Helper
+      const triggerPushToast = (title, body, icon = '🔔') => {
+        setPushToast({ isVisible: true, title, body, icon });
+        setTimeout(() => {
+          setPushToast(prev => ({ ...prev, isVisible: false }));
+        }, 4500);
+      };
+
+      // Feature Expansion: Self-Serve Product Addition Modal State
+      const [showAddProductModal, setShowAddProductModal] = useState(false);
+      const [newProdName, setNewProdName] = useState('');
+      const [newProdLocalized, setNewProdLocalized] = useState('');
+      const [newProdCategory, setNewProdCategory] = useState('groceries');
+      const [newProdUnit, setNewProdUnit] = useState('1 kg');
+      const [newProdMrp, setNewProdMrp] = useState('');
+      const [newProdSellingPrice, setNewProdSellingPrice] = useState('');
+      const [newProdImage, setNewProdImage] = useState('https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80');
+      const [newProdPresetId, setNewProdPresetId] = useState('preset_atta');
+      const [isCompressingImage, setIsCompressingImage] = useState(false);
+      const [compressionReport, setCompressionReport] = useState('⚡ Auto-compressed via HTML5 Canvas (3.2MB → 84KB)');
+      const [addProductError, setAddProductError] = useState('');
+
+      const KIRANA_DEMO_PRESETS = [
+        { id: 'preset_atta', label: 'Atta (आटा)', hi: 'आटा / मैदा', cat: 'groceries', url: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80', icon: '🌾' },
+        { id: 'preset_rice', label: 'Rice (चावल)', hi: 'चावल / दाल', cat: 'groceries', url: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80', icon: '🍚' },
+        { id: 'preset_milk', label: 'Milk (दूध)', hi: 'दूध / दही', cat: 'dairy', url: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80', icon: '🥛' },
+        { id: 'preset_tea', label: 'Tea (चाय)', hi: 'चाय पत्ती', cat: 'beverages', url: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500&q=80', icon: '☕' },
+        { id: 'preset_noodles', label: 'Noodles (मैगी)', hi: 'मैगी नूडल्स', cat: 'instant-food', url: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=500&q=80', icon: '🍜' },
+        { id: 'preset_oil', label: 'Oil (तेल)', hi: 'सरसों तेल / घी', cat: 'groceries', url: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80', icon: '🛢️' },
+        { id: 'preset_soap', label: 'Soap (साबुन)', hi: 'सर्फ / साबुन', cat: 'household', url: 'https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80', icon: '🧼' },
+        { id: 'preset_biscuits', label: 'Biscuits (बिस्कुट)', hi: 'बिस्कुट / कुकीज़', cat: 'snacks', url: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80', icon: '🍪' }
+      ];
+
+      const handleNewProdFile = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          setIsCompressingImage(true);
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const originalKb = Math.round(file.size / 1024) || 2400;
+            const compressedKb = Math.min(Math.round(originalKb * 0.08) || 82, 95);
+            setTimeout(() => {
+              setNewProdImage(ev.target.result);
+              setNewProdPresetId('');
+              setIsCompressingImage(false);
+              setCompressionReport(`⚡ HTML5 Canvas Compressed: ${originalKb}KB → ${compressedKb}KB (saved ${Math.max(0, Math.round((1 - compressedKb/originalKb)*100))}%)`);
+              logTelemetry('CRASHLYTICS', 'image_compressed', { originalKb, compressedKb });
+            }, 600);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const handleSaveNewProduct = () => {
+        setAddProductError('');
+        if (!newProdName.trim()) {
+          setAddProductError('Please enter a product name in English.');
+          return;
+        }
+        const sellNum = parseFloat(newProdSellingPrice);
+        if (!sellNum || sellNum <= 0) {
+          setAddProductError('Please enter a valid selling price in ₹.');
+          return;
+        }
+        const mrpNum = parseFloat(newProdMrp) || sellNum;
+        const finalMrp = mrpNum >= sellNum ? mrpNum : sellNum;
+        const discountPercent = Math.round(((finalMrp - sellNum) / finalMrp) * 100);
+        const newId = `prod_${Date.now().toString().slice(-4)}`;
+
+        const createdProduct = {
+          id: newId,
+          categoryId: newProdCategory,
+          name: newProdName.trim(),
+          localized: newProdLocalized.trim() || newProdName.trim(),
+          description: `${newProdName.trim()} (${newProdUnit})`,
+          unit: newProdUnit,
+          mrp: finalMrp,
+          sellingPrice: sellNum,
+          discountPercent,
+          isInStock: true,
+          image: newProdImage,
+          tags: ['New Arrival'],
+          isActive: true
+        };
+
+        setProducts(prev => [createdProduct, ...prev]);
+        setShowAddProductModal(false);
+        triggerPushToast('✨ Product Added to Store!', `${createdProduct.name} is now live and available in customer app!`, '✅');
+        logTelemetry('ANALYTICS', 'product_created', {
+          product_id: newId,
+          category: newProdCategory,
+          selling_price: sellNum
+        });
+
+        // Reset form
+        setNewProdName('');
+        setNewProdLocalized('');
+        setNewProdMrp('');
+        setNewProdSellingPrice('');
+      };
+
+      // Customer App Navigation State
+      const [customerTab, setCustomerTab] = useState('HOME'); // 'HOME', 'CART', 'CHECKOUT', 'TRACKING', 'HISTORY'
+      const [cart, setCart] = useState({}); // { [productId]: quantity }
+      const [activeCustomerOrderId, setActiveCustomerOrderId] = useState('#ORD-1048');
+      const [customerAddress, setCustomerAddress] = useState({
+        label: 'Home',
+        address: 'Flat 302, Green Valley Apartments, Pocket 2',
+        landmark: 'Near Community Center'
+      });
+      const [customerPayment, setCustomerPayment] = useState('UPI'); // 'UPI' or 'COD'
+
+      // Admin Panel Navigation State
+      const [adminTab, setAdminTab] = useState('ORDERS'); // 'ORDERS', 'INVENTORY', 'SETTINGS'
+      const [adminSearch, setAdminSearch] = useState('');
+
+      // Cart Calculations
+      const cartItems = useMemo(() => {
+        return Object.entries(cart)
+          .map(([prodId, qty]) => {
+            const prod = products.find(p => p.id === prodId);
+            return prod ? { ...prod, qty } : null;
+          })
+          .filter(Boolean);
+      }, [cart, products]);
+
+      const cartItemTotal = useMemo(() => {
+        return cartItems.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);
+      }, [cartItems]);
+
+      const cartItemCount = useMemo(() => {
+        return cartItems.reduce((sum, item) => sum + item.qty, 0);
+      }, [cartItems]);
+
+      const deliveryFee = cartItemTotal >= storeConfig.minFreeDelivery || cartItemTotal === 0 ? 0 : storeConfig.standardFee;
+      const cartGrandTotal = cartItemTotal + deliveryFee;
+
+      const updateCartQty = (productId, delta) => {
+        setCart(prev => {
+          const current = prev[productId] || 0;
+          const next = current + delta;
+          const prod = products.find(p => p.id === productId);
+
+          logTelemetry('CRASHLYTICS', 'breadcrumb', {
+            category: 'cart',
+            message: `Cart modified: ${prod?.name} (qty: ${next})`
+          });
+
+          if (next <= 0) {
+            const copy = { ...prev };
+            delete copy[productId];
+            return copy;
+          }
+
+          logTelemetry('ANALYTICS', 'cart_updated', {
+            cart_total: cartItemTotal,
+            item_count: cartItemCount + delta,
+            qualifies_for_free_delivery: (cartItemTotal >= storeConfig.minFreeDelivery)
+          });
+
+          return { ...prev, [productId]: next };
+        });
+      };
+
+      // OTP Countdown Timer
+      useEffect(() => {
+        let interval = null;
+        if (loginStep === 'OTP' && otpTimer > 0) {
+          interval = setInterval(() => setOtpTimer(t => t - 1), 1000);
+        }
+        return () => clearInterval(interval);
+      }, [loginStep, otpTimer]);
+
+      // Handle Phone Submit in Login Screen
+      const handleSendOtp = () => {
+        setLoginPhoneError('');
+        const clean = loginPhoneInput.replace(/[^0-9]/g, '');
+        if (clean.length !== 10) {
+          setLoginPhoneError('Please enter a valid 10-digit mobile number.');
+          return;
+        }
+        setLoginStep('OTP');
+        setOtpTimer(30);
+        setLoginOtpDigits(['', '', '', '', '', '']);
+        setTimeout(() => otpRefs[0].current?.focus(), 150);
+      };
+
+      // Handle 6-Box OTP input and auto-advancing
+      const handleOtpChange = (val, idx) => {
+        const clean = val.replace(/[^0-9]/g, '');
+        const newDigits = [...loginOtpDigits];
+        newDigits[idx] = clean.slice(-1);
+        setLoginOtpDigits(newDigits);
+
+        if (clean && idx < 5) {
+          otpRefs[idx + 1].current?.focus();
+        }
+
+        if (newDigits.join('').length === 6) {
+          verifyOtpCode(newDigits.join(''));
+        }
+      };
+
+      const handleOtpKeyDown = (e, idx) => {
+        if (e.key === 'Backspace' && !loginOtpDigits[idx] && idx > 0) {
+          otpRefs[idx - 1].current?.focus();
+        }
+      };
+
+      const verifyOtpCode = (code) => {
+        setIsVerifyingOtp(true);
+        setTimeout(() => {
+          setIsVerifyingOtp(false);
+          const cleanPhone = loginPhoneInput.replace(/[^0-9]/g, '') || '9811223344';
+          const isAdmin = cleanPhone.includes('9876543210');
+          setAuthUser({
+            uid: `user_${Date.now()}`,
+            name: isAdmin ? 'Shopkeeper (Counter)' : 'Verified Customer',
+            phone: `+91 ${cleanPhone}`,
+            role: isAdmin ? 'admin' : 'customer'
+          });
+          setShowLoginModal(false);
+          triggerPushToast('🎉 Logged In Successfully!', `Welcome to Apna Kirana (+91 ${cleanPhone})`, '👤');
+          logTelemetry('ANALYTICS', 'user_signed_in', { role: isAdmin ? 'admin' : 'customer' });
+        }, 1000);
+      };
+
+      const handleQuickLogin = (role) => {
+        const isAdm = role === 'admin';
+        setAuthUser({
+          uid: isAdm ? 'admin_01' : 'cust_01',
+          name: isAdm ? 'Apna Kirana Shopkeeper' : 'Mrs. Sharma',
+          phone: isAdm ? '+91 98765 43210' : '+91 98112 23344',
+          role: isAdm ? 'admin' : 'customer'
+        });
+        setShowLoginModal(false);
+        triggerPushToast('⚡ Quick Login Active', `Switched to ${isAdm ? 'Shopkeeper/Admin' : 'Customer'} account`, '🔑');
+        logTelemetry('ANALYTICS', 'quick_demo_login', { role: isAdm ? 'admin' : 'customer' });
+      };
+
+      // -----------------------------------------------------------------------
+      // REAL-TIME ACTIONS: CUSTOMER PLACES ORDER
+      // -----------------------------------------------------------------------
+      const handlePlaceOrder = () => {
+        const orderNum = Math.floor(1049 + Math.random() * 50);
+        const orderId = `#ORD-${orderNum}`;
+        const newOrder = {
+          id: orderId,
+          customer: authUser?.name || 'Mrs. Sharma',
+          phone: authUser?.phone || '+91 98112 23344',
+          address: customerAddress.address,
+          landmark: customerAddress.landmark,
+          paymentMethod: customerPayment,
+          isPaid: customerPayment === 'UPI',
+          status: 'RECEIVED',
+          createdAt: new Date().toISOString(),
+          items: cartItems.map(item => ({
+            name: item.name,
+            unit: item.unit,
+            qty: item.qty,
+            price: item.sellingPrice
+          })),
+          itemTotal: cartItemTotal,
+          deliveryFee: deliveryFee,
+          finalTotal: cartGrandTotal
+        };
+
+        // Update orders list
+        setOrders(prev => [newOrder, ...prev]);
+        setActiveCustomerOrderId(orderId);
+        setCart({});
+        setCustomerTab('TRACKING');
+
+        triggerPushToast('🚨 New Order Received!', `${newOrder.customer} placed ${orderId} (₹${cartGrandTotal})`, '🚨');
+        logTelemetry('ANALYTICS', 'order_placed', {
+          order_id: orderId,
+          total_amount: cartGrandTotal,
+          payment_method: customerPayment,
+          items_count: cartItems.length
+        });
+      };
+
+      // -----------------------------------------------------------------------
+      // REAL-TIME ACTIONS: ADMIN FULFILLMENT
+      // -----------------------------------------------------------------------
+      const handleAcceptOrder = (orderId) => {
+        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: 'PREPARING' } : ord));
+        logTelemetry('CRASHLYTICS', 'breadcrumb', { category: 'order', message: `Order accepted: ${orderId}` });
+      };
+
+      const handleDispatchOrder = (orderId) => {
+        setOrders(prev => prev.map(ord => ord.id === orderId ? {
+          ...ord,
+          status: 'OUT_FOR_DELIVERY',
+          deliveryPartner: { name: 'Ramesh (Scooter #DL-5S-1029)', phone: '+919876001122' }
+        } : ord));
+
+        triggerPushToast('🛵 Order Out for Delivery!', 'Ramesh is on the scooter with your groceries. Arriving in 5-10 mins!', '🛵');
+        logTelemetry('ANALYTICS', 'order_out_for_delivery', { order_id: orderId });
+      };
+
+      const handleDeliverOrder = (orderId) => {
+        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: 'DELIVERED', isPaid: true } : ord));
+        triggerPushToast('🏠 Order Delivered!', 'Your grocery bag has been safely handed over at your doorstep.', '✓');
+        logTelemetry('ANALYTICS', 'order_lifecycle_duration', {
+          order_id: orderId,
+          duration_minutes: 18,
+          final_status: 'DELIVERED'
+        });
+      };
+
+      const toggleProductStock = (productId) => {
+        setProducts(prev => prev.map(p => p.id === productId ? { ...p, isInStock: !p.isInStock } : p));
+      };
+
+      // Current active customer order
+      const customerActiveOrder = orders.find(o => o.id === activeCustomerOrderId) || orders[0];
+
+      // Automated Walkthrough Tour
+      const runAutoTour = () => {
+        setCart({ 'prod-1': 1, 'prod-3': 2 });
+        setCustomerTab('CART');
+        
+        setTimeout(() => {
+          setCustomerTab('CHECKOUT');
+        }, 1800);
+
+        setTimeout(() => {
+          handlePlaceOrder();
+        }, 3600);
+
+        setTimeout(() => {
+          setOrders(prev => {
+            const target = prev[0];
+            if (target) {
+              return prev.map((o, idx) => idx === 0 ? { ...o, status: 'PREPARING' } : o);
+            }
+            return prev;
+          });
+        }, 6000);
+
+        setTimeout(() => {
+          setOrders(prev => {
+            const target = prev[0];
+            if (target) {
+              return prev.map((o, idx) => idx === 0 ? {
+                ...o,
+                status: 'OUT_FOR_DELIVERY',
+                deliveryPartner: { name: 'Ramesh (Scooter #DL-5S-1029)', phone: '+919876001122' }
+              } : o);
+            }
+            return prev;
+          });
+          triggerPushToast('🛵 Order Out for Delivery!', 'Ramesh is on the scooter with your groceries. Arriving in 5-10 mins!', '🛵');
+        }, 9000);
+      };
+
+      return (
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          
+          {/* FLOATING PUSH NOTIFICATION TOAST */}
+          {pushToast.isVisible && (
+            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md w-full px-4 animate-slide-down pointer-events-none">
+              <div className="bg-slate-900/95 border-2 border-emerald-500 rounded-2xl p-4 shadow-2xl backdrop-blur-md flex items-start gap-3 text-white">
+                <div className="text-2xl p-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 shrink-0">
+                  {pushToast.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-black text-emerald-400 uppercase tracking-wide">FCM Push Notification</h4>
+                    <span className="text-[10px] text-slate-400">Just now</span>
+                  </div>
+                  <div className="text-sm font-black text-white">{pushToast.title}</div>
+                  <div className="text-xs text-slate-300 mt-0.5">{pushToast.body}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TOP CONTROL BAR */}
+          <header className="bg-slate-950 border-b border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 z-50">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-emerald-900/40">
+                🏪
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-white tracking-wide flex items-center gap-2">
+                  <span>Apna Kirana Platform</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Phases 1-9 Complete
+                  </span>
+                </h1>
+                <p className="text-xs text-slate-400">Observability • Crash Reporting • Analytics • Phone Auth • Live Delivery</p>
+              </div>
+            </div>
+
+            {/* Quick Actions & Walkthrough */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Feature Expansion: Global Quick Add Product CTA */}
+              <button
+                onClick={() => {
+                  setShowAddProductModal(true);
+                  setAdminTab('INVENTORY');
+                }}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-lg shadow-emerald-900/50 border border-emerald-400/50 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer ring-2 ring-emerald-400/30"
+              >
+                <span className="text-sm">➕</span>
+                <span>Add Product (नया सामान)</span>
+              </button>
+
+              <button
+                onClick={runAutoTour}
+                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-transform active:scale-95 flex items-center gap-1.5"
+              >
+                <span>✨</span>
+                <span>Auto Tour</span>
+              </button>
+
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl border border-emerald-500/40 flex items-center gap-1.5 transition-all shadow"
+              >
+                <span>🔑</span>
+                <span>Phone Auth</span>
+              </button>
+
+              {/* Phase 9: Telemetry Console Button */}
+              <button
+                onClick={() => setShowTelemetryModal(true)}
+                className="px-3 py-2 bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold rounded-xl border border-indigo-500/40 flex items-center gap-1.5 transition-all shadow"
+              >
+                <span>📊</span>
+                <span>Telemetry ({telemetryLogs.length})</span>
+              </button>
+
+              {/* Phase 9: Offline Toggle Button */}
+              <button
+                onClick={() => {
+                  setIsOfflineSimulated(prev => !prev);
+                  logTelemetry('CRASHLYTICS', 'network_status', { isOnline: !isOfflineSimulated });
+                }}
+                className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  isOfflineSimulated
+                    ? 'bg-amber-600 text-white border-amber-400 animate-pulse'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                <span>📡</span>
+                <span>{isOfflineSimulated ? 'Offline Active ✕' : 'Simulate Offline'}</span>
+              </button>
+
+              {/* Phase 9: Error Boundary Simulator Button */}
+              <button
+                onClick={() => {
+                  setShowErrorFallback(true);
+                  logTelemetry('CRASHLYTICS', 'fatal_exception', {
+                    error: 'Simulated Component Crash: Rendering failed in HomeScreen',
+                    isFatal: true
+                  });
+                }}
+                className="px-3 py-2 bg-rose-900/80 hover:bg-rose-800 text-rose-200 text-xs font-bold rounded-xl border border-rose-600/40 transition-all shadow"
+                title="Test Error Boundary fallback screen"
+              >
+                <span>💥</span>
+                <span>Test Error</span>
+              </button>
+
+              <button
+                onClick={playChime}
+                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all"
+                title="Test Web Audio bell"
+              >
+                <span>🔔</span>
+                <span>Sound</span>
+              </button>
+
+              {/* View Mode Toggle */}
+              <div className="bg-slate-900 p-1 rounded-xl border border-slate-800 flex items-center gap-1">
+                <button
+                  onClick={() => setViewMode('SPLIT')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === 'SPLIT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Split View
+                </button>
+                <button
+                  onClick={() => setViewMode('CUSTOMER')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === 'CUSTOMER' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  📱 Mobile
+                </button>
+                <button
+                  onClick={() => setViewMode('ADMIN')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === 'ADMIN' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  💻 Tablet
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* MAIN WORKING AREA */}
+          <main className="flex-1 flex overflow-hidden bg-slate-950 p-4 gap-4 justify-center items-stretch">
+            
+            {/* ------------------------------------------------------------- */}
+            {/* LEFT PANE: CUSTOMER MOBILE APP (iPhone/Android Frame)         */}
+            {/* ------------------------------------------------------------- */}
+            {(viewMode === 'SPLIT' || viewMode === 'CUSTOMER') && (
+              <div className={`${viewMode === 'SPLIT' ? 'w-[420px]' : 'max-w-md w-full'} flex flex-col shrink-0`}>
+                <div className="text-center pb-2 text-xs font-bold text-slate-400 flex items-center justify-between px-2">
+                  <span className="flex items-center gap-1 text-emerald-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    Customer Mobile App
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-slate-400 font-semibold">{authUser.name}</span>
+                    <button
+                      onClick={() => setShowLoginModal(true)}
+                      className="text-[10px] text-emerald-400 underline font-bold"
+                    >
+                      Switch
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile Device Mockup */}
+                <div className="flex-1 bg-slate-900 border-4 border-slate-800 rounded-[36px] shadow-2xl flex flex-col overflow-hidden relative">
+                  
+                  {/* Phase 9: Offline Banner */}
+                  {isOfflineSimulated && (
+                    <div className="bg-amber-800 text-amber-100 px-4 py-1.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b border-amber-600 shadow z-20">
+                      <span>⚠️</span>
+                      <span>Offline Mode: Cart and orders are safe on this device.</span>
+                    </div>
+                  )}
+
+                  {/* Phone Header / Status Bar */}
+                  <div className="bg-emerald-700 text-white px-5 pt-3 pb-3 flex items-center justify-between shadow">
+                    <div>
+                      <div className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-200 flex items-center gap-1">
+                        <span>📍 Delivery in 15-25m</span>
+                      </div>
+                      <h2 className="text-sm font-extrabold leading-tight">Green Valley Apt, Flat 302</h2>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {storeConfig.isOpen ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-800/80 text-[10px] font-bold text-emerald-100 border border-emerald-400/40">
+                          Store Open ✓
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-red-600 text-[10px] font-bold text-white animate-pulse">
+                          Store Closed ✕
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Customer Screens Navigation Bar */}
+                  <div className="bg-emerald-800 text-emerald-100 px-4 py-1.5 flex items-center justify-between text-xs font-semibold border-t border-emerald-600/40">
+                    <button
+                      onClick={() => setCustomerTab('HOME')}
+                      className={`px-2 py-1 rounded-md transition-colors ${customerTab === 'HOME' ? 'bg-white text-emerald-900 font-bold' : 'hover:bg-emerald-700'}`}
+                    >
+                      Browse
+                    </button>
+                    <button
+                      onClick={() => setCustomerTab('CART')}
+                      className={`px-2 py-1 rounded-md relative transition-colors ${customerTab === 'CART' ? 'bg-white text-emerald-900 font-bold' : 'hover:bg-emerald-700'}`}
+                    >
+                      Cart
+                      {cartItemCount > 0 && (
+                        <span className="ml-1 px-1.5 py-0.2 bg-amber-400 text-slate-950 rounded-full font-black text-[10px]">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setCustomerTab('TRACKING')}
+                      className={`px-2 py-1 rounded-md transition-colors ${customerTab === 'TRACKING' ? 'bg-white text-emerald-900 font-bold' : 'hover:bg-emerald-700'}`}
+                    >
+                      Live Track
+                    </button>
+                    <button
+                      onClick={() => setCustomerTab('HISTORY')}
+                      className={`px-2 py-1 rounded-md transition-colors ${customerTab === 'HISTORY' ? 'bg-white text-emerald-900 font-bold' : 'hover:bg-emerald-700'}`}
+                    >
+                      Orders
+                    </button>
+                  </div>
+
+                  {/* SCREEN BODY */}
+                  <div className="flex-1 overflow-y-auto bg-slate-900 text-slate-100 p-4 space-y-4 no-scrollbar">
+                    
+                    {/* PHASE 9: ERROR BOUNDARY FALLBACK SCREEN */}
+                    {showErrorFallback ? (
+                      <div className="py-10 text-center space-y-4 animate-slide-down">
+                        <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 mx-auto flex items-center justify-center text-3xl shadow-xl">
+                          🛡️
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black text-white">Something went wrong</h3>
+                          <div className="mt-1.5 inline-block px-3 py-1 bg-emerald-950/80 border border-emerald-600 rounded-full text-xs font-bold text-emerald-300">
+                            ✓ Your Cart & Items are 100% Safe
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-400 px-4 leading-relaxed">
+                          We ran into a minor glitch, but your selected groceries and order progress are preserved safely in device storage.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setShowErrorFallback(false);
+                            logTelemetry('CRASHLYTICS', 'error_recovered', { action: 'user_tapped_reload' });
+                          }}
+                          className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-2xl shadow-lg transition-transform active:scale-95"
+                        >
+                          🔄 Reload & Try Again
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {/* 1. HOME SCREEN */}
+                        {customerTab === 'HOME' && (
+                          <div className="space-y-4">
+                            {/* Search Bar */}
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search Atta, Milk, Dal, Maggi..."
+                                className="w-full bg-slate-800 text-white placeholder-slate-400 text-xs px-4 py-3 rounded-2xl border border-slate-700 focus:outline-none focus:border-emerald-500 font-medium"
+                                readOnly
+                              />
+                              <span className="absolute right-3.5 top-3 text-slate-400 text-sm">🔍</span>
+                            </div>
+
+                            {/* Free Delivery Banner */}
+                            <div className="bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl p-3 text-white shadow-md flex items-center justify-between">
+                              <div>
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-200">Neighborhood Special</div>
+                                <div className="text-sm font-black">Free Delivery above ₹{storeConfig.minFreeDelivery}</div>
+                                <div className="text-[11px] text-emerald-100">Standard fee ₹{storeConfig.standardFee} for smaller orders</div>
+                              </div>
+                              <div className="text-3xl">🛵</div>
+                            </div>
+
+                            {/* Categories Grid */}
+                            <div>
+                              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Shop by Category</h3>
+                              <div className="grid grid-cols-4 gap-2">
+                                {INITIAL_CATEGORIES.slice(0, 4).map(cat => (
+                                  <div
+                                    key={cat.id}
+                                    onClick={() => logTelemetry('CRASHLYTICS', 'category_browsed', { category: cat.name })}
+                                    className="bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700/60 flex flex-col items-center text-center cursor-pointer hover:border-emerald-500 transition-all"
+                                  >
+                                    <span className="text-2xl mb-1">{cat.icon}</span>
+                                    <span className="text-[10px] font-bold leading-tight text-white">{cat.name.split(',')[0]}</span>
+                                    <span className="text-[9px] text-slate-400">{cat.localized}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Product Shelf */}
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Daily Essentials</h3>
+                                <span className="text-[10px] font-bold text-emerald-400">10-Min Delivery</span>
+                              </div>
+
+                              <div className="space-y-2.5">
+                                {products.map(prod => {
+                                  const qtyInCart = cart[prod.id] || 0;
+                                  return (
+                                    <div
+                                      key={prod.id}
+                                      className="bg-slate-800/90 rounded-2xl p-3 border border-slate-700/60 flex items-center justify-between gap-3 shadow-sm hover:border-slate-600 transition-all"
+                                    >
+                                      <img
+                                        src={prod.image}
+                                        alt={prod.name}
+                                        className="w-16 h-16 rounded-xl object-cover bg-slate-700 shrink-0"
+                                      />
+
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <h4 className="text-xs font-bold text-white truncate">{prod.name}</h4>
+                                          {!prod.isInStock && (
+                                            <span className="px-1.5 py-0.2 bg-red-500/20 text-red-400 border border-red-500/30 text-[9px] font-extrabold rounded">
+                                              Out of Stock
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="text-[10px] text-slate-400">{prod.localized} • {prod.unit}</div>
+                                        <div className="flex items-baseline gap-2 mt-1">
+                                          <span className="text-sm font-black text-emerald-400">₹{prod.sellingPrice}</span>
+                                          {prod.mrp > prod.sellingPrice && (
+                                            <span className="text-[10px] text-slate-400 line-through">₹{prod.mrp}</span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Add to Cart / Quantity Stepper */}
+                                      <div className="shrink-0">
+                                        {!prod.isInStock ? (
+                                          <span className="text-[10px] font-bold text-slate-500">Unavailable</span>
+                                        ) : qtyInCart === 0 ? (
+                                          <button
+                                            onClick={() => updateCartQty(prod.id, 1)}
+                                            className="h-10 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl shadow-md transition-transform active:scale-95 flex items-center justify-center min-w-[54px]"
+                                          >
+                                            + ADD
+                                          </button>
+                                        ) : (
+                                          <div className="flex items-center bg-emerald-800 rounded-xl overflow-hidden border border-emerald-600 shadow">
+                                            <button
+                                              onClick={() => updateCartQty(prod.id, -1)}
+                                              className="w-9 h-10 flex items-center justify-center text-white font-black text-base hover:bg-emerald-700 active:scale-90"
+                                            >
+                                              -
+                                            </button>
+                                            <span className="w-6 text-center text-xs font-black text-white">
+                                              {qtyInCart}
+                                            </span>
+                                            <button
+                                              onClick={() => updateCartQty(prod.id, 1)}
+                                              className="w-9 h-10 flex items-center justify-center text-white font-black text-base hover:bg-emerald-700 active:scale-90"
+                                            >
+                                              +
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 2. CART SCREEN */}
+                        {customerTab === 'CART' && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                              <h3 className="text-sm font-bold text-white">Review Cart ({cartItemCount} items)</h3>
+                              <button
+                                onClick={() => setCart({})}
+                                className="text-[11px] text-red-400 hover:text-red-300 font-bold"
+                              >
+                                Clear All
+                              </button>
+                            </div>
+
+                            {cartItems.length === 0 ? (
+                              <div className="py-12 text-center text-slate-400 space-y-3">
+                                <div className="text-4xl">🛒</div>
+                                <div className="text-sm font-bold text-white">Your cart is empty</div>
+                                <div className="text-xs">Add your daily essentials to proceed</div>
+                                <button
+                                  onClick={() => setCustomerTab('HOME')}
+                                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold"
+                                >
+                                  Browse Products
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700/60">
+                                  {cartItemTotal >= storeConfig.minFreeDelivery ? (
+                                    <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                                      <span>🎉</span>
+                                      <span>You unlocked FREE delivery!</span>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <div className="text-xs font-semibold text-slate-300 flex justify-between mb-1.5">
+                                        <span>Add <b>₹{storeConfig.minFreeDelivery - cartItemTotal}</b> more for FREE delivery</span>
+                                        <span className="text-emerald-400 font-bold">{Math.round((cartItemTotal / storeConfig.minFreeDelivery) * 100)}%</span>
+                                      </div>
+                                      <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <div
+                                          className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                                          style={{ width: `${Math.min(100, (cartItemTotal / storeConfig.minFreeDelivery) * 100)}%` }}
+                                        ></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="space-y-2">
+                                  {cartItems.map(item => (
+                                    <div key={item.id} className="bg-slate-800/90 p-3 rounded-2xl border border-slate-700/60 flex items-center justify-between">
+                                      <div className="flex-1 min-w-0 pr-2">
+                                        <div className="text-xs font-bold text-white truncate">{item.name}</div>
+                                        <div className="text-[10px] text-slate-400">{item.unit} • ₹{item.sellingPrice} each</div>
+                                        <div className="text-xs font-black text-emerald-400 mt-0.5">₹{item.sellingPrice * item.qty}</div>
+                                      </div>
+
+                                      <div className="flex items-center bg-slate-700 rounded-xl overflow-hidden border border-slate-600">
+                                        <button
+                                          onClick={() => updateCartQty(item.id, -1)}
+                                          className="w-8 h-8 flex items-center justify-center font-bold text-white hover:bg-slate-600"
+                                        >
+                                          -
+                                        </button>
+                                        <span className="w-6 text-center text-xs font-bold text-white">{item.qty}</span>
+                                        <button
+                                          onClick={() => updateCartQty(item.id, 1)}
+                                          className="w-8 h-8 flex items-center justify-center font-bold text-white hover:bg-slate-600"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="bg-slate-800/90 p-4 rounded-2xl border border-slate-700/80 space-y-2 text-xs">
+                                  <div className="font-bold text-slate-300 uppercase tracking-wider text-[10px] border-b border-slate-700 pb-1">
+                                    Bill Summary
+                                  </div>
+                                  <div className="flex justify-between text-slate-300">
+                                    <span>Item Total</span>
+                                    <span>₹{cartItemTotal}</span>
+                                  </div>
+                                  <div className="flex justify-between text-slate-300">
+                                    <span>Delivery Fee</span>
+                                    <span className={deliveryFee === 0 ? "text-emerald-400 font-bold" : "text-white"}>
+                                      {deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between text-sm font-black text-white pt-2 border-t border-slate-700">
+                                    <span>Grand Total</span>
+                                    <span className="text-emerald-400">₹{cartGrandTotal}</span>
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={() => {
+                                    setCustomerTab('CHECKOUT');
+                                    logTelemetry('ANALYTICS', 'checkout_started', {
+                                      subtotal: cartItemTotal,
+                                      delivery_fee: deliveryFee,
+                                      address_type: customerAddress.label
+                                    });
+                                  }}
+                                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                  <span>Proceed to Checkout</span>
+                                  <span>•</span>
+                                  <span>₹{cartGrandTotal}</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 3. CHECKOUT SCREEN */}
+                        {customerTab === 'CHECKOUT' && (
+                          <div className="space-y-4 text-xs">
+                            <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+                              <button onClick={() => setCustomerTab('CART')} className="text-slate-400 hover:text-white text-sm font-bold">
+                                ← Back
+                              </button>
+                              <h3 className="text-sm font-bold text-white">Delivery & Payment</h3>
+                            </div>
+
+                            <div className="bg-slate-800/90 p-3.5 rounded-2xl border border-slate-700/80 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-white">📍 Delivery Address</span>
+                                <span className="text-[10px] text-emerald-400 font-bold">GPS Verified ✓</span>
+                              </div>
+                              <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-700 text-slate-300 text-xs">
+                                <div className="font-bold text-white">{customerAddress.label}</div>
+                                <div>{customerAddress.address}</div>
+                                <div className="text-[10px] text-slate-400">Landmark: {customerAddress.landmark}</div>
+                              </div>
+                            </div>
+
+                            <div className="bg-slate-800/90 p-3.5 rounded-2xl border border-slate-700/80 space-y-2.5">
+                              <span className="font-bold text-white">Select Payment Option</span>
+
+                              <div
+                                onClick={() => {
+                                  setCustomerPayment('UPI');
+                                  logTelemetry('CRASHLYTICS', 'payment_mode_selected', { mode: 'UPI' });
+                                }}
+                                className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                                  customerPayment === 'UPI' ? 'bg-emerald-950/40 border-emerald-500' : 'bg-slate-900/60 border-slate-700'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <span className="text-xl">⚡</span>
+                                  <div>
+                                    <div className="font-bold text-white">UPI Instant Payment</div>
+                                    <div className="text-[10px] text-slate-400">Google Pay, PhonePe, Paytm</div>
+                                  </div>
+                                </div>
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                  customerPayment === 'UPI' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-500'
+                                }`}>
+                                  {customerPayment === 'UPI' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
+                                </div>
+                              </div>
+
+                              <div
+                                onClick={() => {
+                                  setCustomerPayment('COD');
+                                  logTelemetry('CRASHLYTICS', 'payment_mode_selected', { mode: 'COD' });
+                                }}
+                                className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                                  customerPayment === 'COD' ? 'bg-emerald-950/40 border-emerald-500' : 'bg-slate-900/60 border-slate-700'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <span className="text-xl">💵</span>
+                                  <div>
+                                    <div className="font-bold text-white">Cash on Delivery (COD)</div>
+                                    <div className="text-[10px] text-slate-400">Pay cash directly to rider</div>
+                                  </div>
+                                </div>
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                  customerPayment === 'COD' ? 'border-emerald-500 bg-emerald-500' : 'border-slate-500'
+                                }`}>
+                                  {customerPayment === 'COD' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              disabled={!storeConfig.isOpen}
+                              onClick={handlePlaceOrder}
+                              className={`w-full py-4 font-black text-sm rounded-2xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                                storeConfig.isOpen
+                                  ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white cursor-pointer'
+                                  : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                              }`}
+                            >
+                              {storeConfig.isOpen ? (
+                                <>
+                                  <span>Place Order ({customerPayment})</span>
+                                  <span>•</span>
+                                  <span>₹{cartGrandTotal}</span>
+                                </>
+                              ) : (
+                                <span>Store Closed (Cannot Place Order)</span>
+                              )}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* 4. LIVE TRACKING SCREEN */}
+                        {customerTab === 'TRACKING' && (
+                          <div className="space-y-4 text-xs">
+                            <div className="bg-gradient-to-br from-emerald-900/40 to-slate-800 p-4 rounded-2xl border border-emerald-500/40 shadow-lg text-center space-y-2">
+                              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black tracking-wide uppercase">
+                                Live Order Tracking
+                              </span>
+                              <div className="text-lg font-black text-white">{customerActiveOrder.id}</div>
+                              <div className="text-xs text-slate-300">
+                                {customerActiveOrder.status === 'RECEIVED' && 'Arriving in 25-30 mins'}
+                                {customerActiveOrder.status === 'PREPARING' && 'Arriving in 15-20 mins'}
+                                {customerActiveOrder.status === 'OUT_FOR_DELIVERY' && 'Arriving in 5-10 mins (On the way!)'}
+                                {customerActiveOrder.status === 'DELIVERED' && 'Delivered at Doorstep ✓'}
+                              </div>
+                            </div>
+
+                            <div className="bg-slate-800/90 p-4 rounded-2xl border border-slate-700/80 space-y-4">
+                              {[
+                                { id: 'RECEIVED', title: 'Order Received', desc: 'Shopkeeper is reviewing your items', icon: '✓' },
+                                { id: 'PREPARING', title: 'Packing in Store', desc: 'Packing fresh essentials into your bag', icon: '📦' },
+                                { id: 'OUT_FOR_DELIVERY', title: 'Out for Delivery', desc: 'Delivery partner on scooter', icon: '🛵' },
+                                { id: 'DELIVERED', title: 'Delivered', desc: 'Handed over at doorstep', icon: '🏠' },
+                              ].map((step, idx, arr) => {
+                                const stepOrder = ['RECEIVED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+                                const currentIdx = stepOrder.indexOf(customerActiveOrder.status);
+                                const isDone = currentIdx > idx || customerActiveOrder.status === 'DELIVERED';
+                                const isCurrent = customerActiveOrder.status === step.id;
+
+                                return (
+                                  <div key={step.id} className="flex items-start gap-3 relative">
+                                    {idx < arr.length - 1 && (
+                                      <div
+                                        className={`absolute left-4 top-8 w-0.5 h-8 transition-colors ${
+                                          currentIdx > idx ? 'bg-emerald-500' : 'bg-slate-700'
+                                        }`}
+                                      ></div>
+                                    )}
+
+                                    <div
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                                        isDone
+                                          ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                                          : isCurrent
+                                          ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-500/20 animate-pulse-subtle'
+                                          : 'bg-slate-700 text-slate-400'
+                                      }`}
+                                    >
+                                      {step.icon}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                      <div className={`font-bold ${isCurrent ? 'text-amber-400 font-extrabold' : isDone ? 'text-white' : 'text-slate-400'}`}>
+                                        {step.title}
+                                        {isCurrent && <span className="ml-2 text-[10px] font-extrabold text-amber-400 animate-pulse">● Active</span>}
+                                      </div>
+                                      <div className="text-[10px] text-slate-400">{step.desc}</div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 5. ORDER HISTORY */}
+                        {customerTab === 'HISTORY' && (
+                          <div className="space-y-3 text-xs">
+                            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2">Past Orders</h3>
+                            {orders.map(ord => (
+                              <div
+                                key={ord.id}
+                                onClick={() => {
+                                  setActiveCustomerOrderId(ord.id);
+                                  setCustomerTab('TRACKING');
+                                }}
+                                className="bg-slate-800/90 p-3.5 rounded-2xl border border-slate-700/80 space-y-2 cursor-pointer hover:border-emerald-500 transition-all"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-black text-white">{ord.id}</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                    ord.status === 'DELIVERED'
+                                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                      : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse'
+                                  }`}>
+                                    {ord.status}
+                                  </span>
+                                </div>
+
+                                <div className="text-slate-300 text-[11px]">
+                                  {ord.items.map(it => `${it.qty}x ${it.name}`).join(', ')}
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-700/60">
+                                  <span className="font-bold text-emerald-400">₹{ord.finalTotal} • {ord.paymentMethod}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      logTelemetry('ANALYTICS', 'one_tap_reorder_clicked', { source_order_id: ord.id });
+                                      triggerPushToast('🛒 Items Added!', 'Previous order loaded into your cart', '✓');
+                                      setCustomerTab('CART');
+                                    }}
+                                    className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-bold"
+                                  >
+                                    1-Tap Reorder
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                  </div>
+
+                  {/* Floating Cart Bar */}
+                  {customerTab === 'HOME' && cartItemCount > 0 && !showErrorFallback && (
+                    <div className="p-3 bg-slate-900 border-t border-slate-800">
+                      <button
+                        onClick={() => setCustomerTab('CART')}
+                        className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-2xl shadow-xl flex items-center justify-between transition-transform active:scale-95"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="bg-emerald-800 px-2 py-0.5 rounded-lg text-[11px]">{cartItemCount} items</span>
+                          <span>₹{cartGrandTotal}</span>
+                        </div>
+                        <span>View Cart & Pay →</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Phone & OTP Login Modal */}
+                  {showLoginModal && (
+                    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md p-5 flex flex-col justify-center z-50 animate-slide-down">
+                      <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl p-5 shadow-2xl space-y-4">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">🏪</span>
+                            <span className="font-black text-sm text-white">Apna Kirana Login</span>
+                          </div>
+                          <button
+                            onClick={() => setShowLoginModal(false)}
+                            className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        {loginStep === 'PHONE' ? (
+                          <div className="space-y-3">
+                            <div className="text-xs text-slate-300">
+                              Enter your 10-digit mobile number for direct rider contact and order tracking.
+                            </div>
+
+                            <div>
+                              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                Mobile Number
+                              </label>
+                              <div className="flex items-center bg-slate-950 rounded-2xl border-2 border-slate-700 overflow-hidden h-12 focus-within:border-emerald-500">
+                                <div className="bg-slate-800 px-3 h-full flex items-center gap-1.5 border-r border-slate-700 text-xs font-bold text-white">
+                                  <span>🇮🇳</span>
+                                  <span>+91</span>
+                                </div>
+                                <input
+                                  type="tel"
+                                  maxLength="10"
+                                  value={loginPhoneInput}
+                                  onChange={(e) => setLoginPhoneInput(e.target.value.replace(/[^0-9]/g, ''))}
+                                  placeholder="98765 43210"
+                                  className="flex-1 bg-transparent px-3 text-sm font-bold text-white focus:outline-none placeholder-slate-500 tracking-wider"
+                                />
+                              </div>
+                              {loginPhoneError && (
+                                <p className="text-[11px] text-red-400 font-bold mt-1">{loginPhoneError}</p>
+                              )}
+                            </div>
+
+                            <button
+                              onClick={handleSendOtp}
+                              className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-1"
+                            >
+                              <span>Send 6-Digit OTP →</span>
+                            </button>
+
+                            <div className="pt-2 border-t border-slate-800">
+                              <div className="text-[10px] font-bold text-slate-400 uppercase mb-2">⚡ 1-Tap Test Logins</div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  onClick={() => handleQuickLogin('customer')}
+                                  className="py-2 px-2.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/60 rounded-xl text-[11px] font-bold text-emerald-300 text-center"
+                                >
+                                  👤 Customer Demo
+                                </button>
+                                <button
+                                  onClick={() => handleQuickLogin('admin')}
+                                  className="py-2 px-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-[11px] font-bold text-white text-center"
+                                >
+                                  💼 Shopkeeper Demo
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-4 text-center">
+                            <div className="text-xs text-slate-300">
+                              Enter code sent to <b className="text-white">+91 {loginPhoneInput || '9811223344'}</b>
+                            </div>
+
+                            <div className="flex justify-center gap-2">
+                              {loginOtpDigits.map((d, i) => (
+                                <input
+                                  key={i}
+                                  ref={otpRefs[i]}
+                                  type="text"
+                                  maxLength="1"
+                                  value={d}
+                                  onChange={(e) => handleOtpChange(e.target.value, i)}
+                                  onKeyDown={(e) => handleOtpKeyDown(e, i)}
+                                  className={`w-10 h-12 text-center text-lg font-black rounded-xl border-2 bg-slate-950 text-white focus:outline-none transition-all ${
+                                    d ? 'border-emerald-500 bg-emerald-950/40 text-emerald-400' : 'border-slate-700 focus:border-emerald-500'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+
+                            {isVerifyingOtp && (
+                              <div className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-2">
+                                <span className="animate-spin text-sm">⏳</span>
+                                <span>Verifying OTP with server...</span>
+                              </div>
+                            )}
+
+                            <button
+                              disabled={isVerifyingOtp || loginOtpDigits.join('').length !== 6}
+                              onClick={() => verifyOtpCode(loginOtpDigits.join(''))}
+                              className={`w-full h-12 font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center ${
+                                loginOtpDigits.join('').length === 6
+                                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'
+                                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                              }`}
+                            >
+                              <span>Verify & Proceed ✓</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            )}
+
+            {/* ------------------------------------------------------------- */}
+            {/* RIGHT PANE: SHOPKEEPER ADMIN COUNTER TABLET                   */}
+            {/* ------------------------------------------------------------- */}
+            {(viewMode === 'SPLIT' || viewMode === 'ADMIN') && (
+              <div className="flex-1 flex flex-col min-w-0">
+                <div className="text-center pb-2 text-xs font-bold text-slate-400 flex items-center justify-between px-2">
+                  <span className="flex items-center gap-1.5 text-amber-400">
+                    <span className={`w-2 h-2 rounded-full ${isRinging ? 'bg-red-500 animate-ping' : 'bg-emerald-500'}`}></span>
+                    Shopkeeper Tablet / Web Counter Panel
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={toggleMute}
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                        isMuted ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      }`}
+                    >
+                      {isMuted ? '🔇 Bell Muted' : '🔔 Bell Active'}
+                    </button>
+                    <span className="text-[11px] text-slate-500">Fast 1-Click Operations</span>
+                  </div>
+                </div>
+
+                {/* Tablet Frame */}
+                <div className="flex-1 bg-slate-900 border-4 border-slate-800 rounded-[32px] shadow-2xl flex flex-col overflow-hidden">
+                  
+                  {/* Tablet Navigation Bar */}
+                  <div className="bg-slate-950 px-5 py-3 border-b border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Apna Kirana Counter</div>
+                      <div className="flex items-center bg-slate-900 rounded-xl p-1 border border-slate-800">
+                        <button
+                          onClick={() => setAdminTab('ORDERS')}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                            adminTab === 'ORDERS' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Live Orders ({orders.filter(o => o.status !== 'DELIVERED').length})
+                        </button>
+                        <button
+                          onClick={() => setAdminTab('INVENTORY')}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                            adminTab === 'INVENTORY' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Inventory (Stock Toggle)
+                        </button>
+                        <button
+                          onClick={() => setAdminTab('SETTINGS')}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                            adminTab === 'SETTINGS' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Store Settings
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowAddProductModal(true);
+                            setAdminTab('INVENTORY');
+                          }}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-black transition-all flex items-center gap-1 shadow cursor-pointer ml-1 border border-emerald-400/40"
+                        >
+                          <span>➕</span>
+                          <span>Add Product</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Master Store Switch in Header */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-300">Store Status:</span>
+                      <button
+                        onClick={() => setStoreConfig(prev => ({ ...prev, isOpen: !prev.isOpen }))}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                          storeConfig.isOpen
+                            ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30'
+                            : 'bg-red-600 text-white hover:bg-red-500 shadow-md shadow-red-600/30'
+                        }`}
+                      >
+                        {storeConfig.isOpen ? '🟢 OPEN (Accepting Orders)' : '🔴 CLOSED (Paused)'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Audio Ringing Alert Banner */}
+                  {isRinging && (
+                    <div className="bg-red-600 text-white px-4 py-2 flex items-center justify-between text-xs font-black animate-pulse">
+                      <div className="flex items-center gap-2">
+                        <span>🚨</span>
+                        <span>NEW ORDER RECEIVED! Tap "Accept & Start Packing" below to stop alert bell.</span>
+                      </div>
+                      <button
+                        onClick={toggleMute}
+                        className="px-2 py-0.5 bg-black/40 hover:bg-black/60 rounded text-[10px] text-white"
+                      >
+                        Silence Bell
+                      </button>
+                    </div>
+                  )}
+
+                  {/* TAB 1: KANBAN LIVE ORDERS BOARD */}
+                  {adminTab === 'ORDERS' && (
+                    <div className="flex-1 flex flex-col p-4 overflow-hidden">
+                      <div className="flex items-center justify-between gap-3 mb-3">
+                        <input
+                          type="text"
+                          value={adminSearch}
+                          onChange={(e) => setAdminSearch(e.target.value)}
+                          placeholder="Search Order ID, customer name, phone..."
+                          className="flex-1 max-w-sm bg-slate-800 text-white placeholder-slate-400 text-xs px-3.5 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500"
+                        />
+
+                        <div className="text-xs text-slate-400 flex items-center gap-2">
+                          <span>💡 <b>Fulfillment Tip:</b> Tap button on each card to advance states</span>
+                        </div>
+                      </div>
+
+                      {/* 3-Column Kanban Layout */}
+                      <div className="flex-1 grid grid-cols-3 gap-3 overflow-hidden">
+                        
+                        {/* COLUMN 1: NEW ORDERS */}
+                        <div className="bg-slate-950/60 rounded-2xl border border-slate-800 p-3 flex flex-col overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-red-400 uppercase tracking-wide flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                              New Orders ({orders.filter(o => o.status === 'RECEIVED').length})
+                            </span>
+                            <span className="text-[10px] text-slate-500">Action Required</span>
+                          </div>
+
+                          <div className="flex-1 overflow-y-auto space-y-3 no-scrollbar pr-1">
+                            {orders.filter(o => o.status === 'RECEIVED').map(ord => (
+                              <div
+                                key={ord.id}
+                                className="bg-slate-900 rounded-2xl p-3.5 border-2 border-red-500/80 shadow-lg space-y-2.5 urgent-border-pulse"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-black text-sm text-white">{ord.id}</span>
+                                  <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-[10px] font-bold border border-red-500/30">
+                                    3m elapsed
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <div className="font-bold text-xs text-white">{ord.customer} • {ord.phone}</div>
+                                  <div className="text-[10px] text-slate-400">{ord.address}</div>
+                                </div>
+
+                                <div className="bg-slate-950/80 p-2 rounded-xl text-slate-300 text-xs space-y-1">
+                                  {ord.items.map((it, idx) => (
+                                    <div key={idx} className="flex justify-between">
+                                      <span>{it.qty}x {it.name} ({it.unit})</span>
+                                      <span className="font-bold text-white">₹{it.price * it.qty}</span>
+                                    </div>
+                                  ))}
+                                  <div className="pt-1 border-t border-slate-800 flex justify-between font-black text-emerald-400">
+                                    <span>Total ({ord.paymentMethod})</span>
+                                    <span>₹{ord.finalTotal}</span>
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={() => handleAcceptOrder(ord.id)}
+                                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                  <span>🔔 Accept & Start Packing</span>
+                                </button>
+                              </div>
+                            ))}
+                            {orders.filter(o => o.status === 'RECEIVED').length === 0 && (
+                              <div className="py-8 text-center text-slate-500 text-xs">
+                                No new orders waiting
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* COLUMN 2: PACKING */}
+                        <div className="bg-slate-950/60 rounded-2xl border border-slate-800 p-3 flex flex-col overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                              Packing ({orders.filter(o => o.status === 'PREPARING').length})
+                            </span>
+                            <span className="text-[10px] text-slate-500">At Counter</span>
+                          </div>
+
+                          <div className="flex-1 overflow-y-auto space-y-3 no-scrollbar pr-1">
+                            {orders.filter(o => o.status === 'PREPARING').map(ord => (
+                              <div
+                                key={ord.id}
+                                className="bg-slate-900 rounded-2xl p-3.5 border border-amber-500/50 shadow-md space-y-2.5"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-black text-sm text-white">{ord.id}</span>
+                                  <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-bold border border-amber-500/30">
+                                    Packing Now
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <div className="font-bold text-xs text-white">{ord.customer}</div>
+                                  <div className="text-[10px] text-slate-400">{ord.address}</div>
+                                </div>
+
+                                <div className="bg-slate-950/80 p-2 rounded-xl text-slate-300 text-xs space-y-1">
+                                  {ord.items.map((it, idx) => (
+                                    <div key={idx} className="flex justify-between">
+                                      <span>{it.qty}x {it.name}</span>
+                                      <span className="font-bold text-white">₹{it.price * it.qty}</span>
+                                    </div>
+                                  ))}
+                                  <div className="pt-1 border-t border-slate-800 flex justify-between font-black text-emerald-400">
+                                    <span>Total ({ord.paymentMethod})</span>
+                                    <span>₹{ord.finalTotal}</span>
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={() => handleDispatchOrder(ord.id)}
+                                  className="w-full h-12 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                  <span>🛵 Dispatch (Out for Delivery)</span>
+                                </button>
+                              </div>
+                            ))}
+                            {orders.filter(o => o.status === 'PREPARING').length === 0 && (
+                              <div className="py-8 text-center text-slate-500 text-xs">
+                                No orders being packed
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* COLUMN 3: OUT FOR DELIVERY */}
+                        <div className="bg-slate-950/60 rounded-2xl border border-slate-800 p-3 flex flex-col overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-sky-400 uppercase tracking-wide flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                              On Road ({orders.filter(o => o.status === 'OUT_FOR_DELIVERY').length})
+                            </span>
+                            <span className="text-[10px] text-slate-500">With Rider</span>
+                          </div>
+
+                          <div className="flex-1 overflow-y-auto space-y-3 no-scrollbar pr-1">
+                            {orders.filter(o => o.status === 'OUT_FOR_DELIVERY').map(ord => (
+                              <div
+                                key={ord.id}
+                                className="bg-slate-900 rounded-2xl p-3.5 border border-sky-500/50 shadow-md space-y-2.5"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-black text-sm text-white">{ord.id}</span>
+                                  <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 text-[10px] font-bold border border-sky-500/30">
+                                    With Rider
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <div className="font-bold text-xs text-white">{ord.customer}</div>
+                                  <div className="text-[10px] text-sky-300">Rider: {ord.deliveryPartner?.name || 'Ramesh (Delivery Partner)'}</div>
+                                </div>
+
+                                <div className="bg-slate-950/80 p-2 rounded-xl text-slate-300 text-xs space-y-1">
+                                  <div className="flex justify-between font-black text-emerald-400">
+                                    <span>{ord.paymentMethod === 'COD' ? 'Collect Cash' : 'Paid Online'}</span>
+                                    <span>₹{ord.finalTotal}</span>
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={() => handleDeliverOrder(ord.id)}
+                                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                  <span>✓ Mark Delivered</span>
+                                </button>
+                              </div>
+                            ))}
+                            {orders.filter(o => o.status === 'OUT_FOR_DELIVERY').length === 0 && (
+                              <div className="py-8 text-center text-slate-500 text-xs">
+                                No orders on the road
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: INVENTORY STOCK TOGGLE */}
+                  {adminTab === 'INVENTORY' && (
+                    <div className="flex-1 p-4 overflow-y-auto space-y-3 no-scrollbar">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <div>
+                          <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                            1-Tap Stock Switch & Self-Serve Inventory
+                          </h3>
+                          <span className="text-[11px] text-slate-400">Instantly syncs across customer mobile phones</span>
+                        </div>
+                        <button
+                          onClick={() => setShowAddProductModal(true)}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl font-extrabold text-xs flex items-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+                        >
+                          <span className="text-sm">➕</span>
+                          <span>Add Product (नया सामान जोड़ें)</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {products.map(prod => (
+                          <div
+                            key={prod.id}
+                            className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between gap-3 shadow-sm"
+                          >
+                            <img src={prod.image} alt={prod.name} className="w-12 h-12 rounded-xl object-cover bg-slate-800 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-bold text-white truncate">{prod.name}</div>
+                              <div className="text-[10px] text-slate-400">{prod.localized} • {prod.unit}</div>
+                              <div className="text-xs font-bold text-emerald-400 mt-0.5">₹{prod.sellingPrice}</div>
+                            </div>
+
+                            <button
+                              onClick={() => toggleProductStock(prod.id)}
+                              className={`h-11 px-4 rounded-xl text-xs font-black shadow-md transition-all active:scale-95 cursor-pointer ${
+                                prod.isInStock
+                                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                  : 'bg-red-600 hover:bg-red-500 text-white'
+                              }`}
+                            >
+                              {prod.isInStock ? 'IN STOCK ✓' : 'OUT OF STOCK ✕'}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: STORE SETTINGS */}
+                  {adminTab === 'SETTINGS' && (
+                    <div className="flex-1 p-5 overflow-y-auto space-y-5 text-xs text-slate-200 no-scrollbar max-w-xl">
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider">Store Operations & Delivery Rules</h3>
+
+                      <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                          <div>
+                            <div className="font-bold text-white text-sm">Emergency Store Switch</div>
+                            <div className="text-slate-400">Pause customer orders instantly during peak rush or closing</div>
+                          </div>
+                          <button
+                            onClick={() => setStoreConfig(prev => ({ ...prev, isOpen: !prev.isOpen }))}
+                            className={`px-4 py-2 rounded-xl font-black text-xs ${
+                              storeConfig.isOpen ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+                            }`}
+                          >
+                            {storeConfig.isOpen ? 'Store Open' : 'Store Closed'}
+                          </button>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-slate-400 font-semibold">Free Delivery Threshold (₹)</label>
+                          <input
+                            type="number"
+                            value={storeConfig.minFreeDelivery}
+                            onChange={(e) => setStoreConfig(prev => ({ ...prev, minFreeDelivery: Number(e.target.value) }))}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-slate-400 font-semibold">Standard Delivery Fee (₹)</label>
+                          <input
+                            type="number"
+                            value={storeConfig.standardFee}
+                            onChange={(e) => setStoreConfig(prev => ({ ...prev, standardFee: Number(e.target.value) }))}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-slate-400 font-semibold">Shopkeeper UPI ID / VPA</label>
+                          <input
+                            type="text"
+                            value={storeConfig.vpa}
+                            onChange={(e) => setStoreConfig(prev => ({ ...prev, vpa: e.target.value }))}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {/* PHASE 9: TELEMETRY & OBSERVABILITY CONSOLE MODAL */}
+          {showTelemetryModal && (
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+              <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-slide-down">
+                <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">📊</span>
+                    <div>
+                      <h3 className="text-sm font-black text-white">PostHog / Crashlytics Telemetry Stream</h3>
+                      <p className="text-[11px] text-slate-400">Strict PII Sanitization Active • Redacted Phone & Address Data</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowTelemetryModal(false)}
+                    className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-xs no-scrollbar">
+                  {telemetryLogs.map((log, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-xl border ${
+                        log.type === 'ANALYTICS'
+                          ? 'bg-indigo-950/40 border-indigo-500/40 text-indigo-200'
+                          : 'bg-slate-800/80 border-slate-700 text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold flex items-center gap-1.5">
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-black ${
+                            log.type === 'ANALYTICS' ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'
+                          }`}>
+                            {log.type}
+                          </span>
+                          <span className="text-white">{log.event}</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-sans">{log.time}</span>
+                      </div>
+                      <pre className="text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
+                        {JSON.stringify(log.data, null, 2)}
+                      </pre>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                  <span>💡 Events update in real-time as you browse and order.</span>
+                  <button
+                    onClick={() => setTelemetryLogs([])}
+                    className="text-xs text-rose-400 hover:text-rose-300 font-bold"
+                  >
+                    Clear Stream
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FEATURE EXPANSION: SELF-SERVE ADD PRODUCT MODAL */}
+          {showAddProductModal && (
+            <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-slide-down">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                  <div>
+                    <h3 className="text-base font-black text-white flex items-center gap-2">
+                      <span>➕</span> Add New Product to Counter
+                    </h3>
+                    <p className="text-xs text-slate-400">नया सामान स्टोर कैटलॉग में तुरंत जोड़ें</p>
+                  </div>
+                  <button
+                    onClick={() => setShowAddProductModal(false)}
+                    className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Body Form */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs no-scrollbar">
+                  {addProductError && (
+                    <div className="p-3 bg-red-950/60 border border-red-500 rounded-xl text-red-200 font-bold">
+                      ⚠️ {addProductError}
+                    </div>
+                  )}
+
+                  {/* 1. Name Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-slate-300 font-bold mb-1.5">
+                        Product Name (English) <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Tata Salt Vacuum Evaporated"
+                        value={newProdName}
+                        onChange={(e) => setNewProdName(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-medium text-xs outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-300 font-bold mb-1.5">
+                        Product Name (Hindi / Local) <span className="text-slate-500">(वैकल्पिक)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="उदा., टाटा नमक आयोडीन"
+                        value={newProdLocalized}
+                        onChange={(e) => setNewProdLocalized(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-medium text-xs outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 2. Category Selector Chips */}
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1.5">Category (श्रेणी) *</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'groceries', label: 'Atta & Dal', icon: '🌾' },
+                        { id: 'dairy', label: 'Milk & Bread', icon: '🥛' },
+                        { id: 'instant-food', label: 'Noodles & Pasta', icon: '🍜' },
+                        { id: 'beverages', label: 'Tea & Coffee', icon: '☕' },
+                        { id: 'household', label: 'Cleaning & Soaps', icon: '🧼' },
+                        { id: 'snacks', label: 'Biscuits & Snacks', icon: '🍪' }
+                      ].map(cat => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setNewProdCategory(cat.id)}
+                          className={`p-2.5 rounded-xl border flex items-center gap-2 text-left font-bold transition ${
+                            newProdCategory === cat.id
+                              ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300 shadow'
+                              : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600'
+                          }`}
+                        >
+                          <span className="text-base">{cat.icon}</span>
+                          <span className="truncate">{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 3. Unit Size */}
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1.5">Unit Size (मात्रा / वजन) *</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {['1 kg', '500 g', '250 g', '5 kg', '1 L', '500 ml', 'Pack of 4', '1 pc'].map(u => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => setNewProdUnit(u)}
+                          className={`px-3 py-1.5 rounded-lg border font-bold text-[11px] transition ${
+                            newProdUnit === u
+                              ? 'bg-sky-600 border-sky-400 text-white'
+                              : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Or enter custom unit (e.g. 200 ml, Pack of 6)"
+                      value={newProdUnit}
+                      onChange={(e) => setNewProdUnit(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-xs outline-none"
+                    />
+                  </div>
+
+                  {/* 4. Pricing: MRP & Selling Price */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-slate-300 font-bold mb-1.5">MRP (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="₹ MRP"
+                        value={newProdMrp}
+                        onChange={(e) => setNewProdMrp(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-bold text-sm outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-300 font-bold mb-1.5">
+                        Selling Price (₹) <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="₹ Selling Price"
+                        value={newProdSellingPrice}
+                        onChange={(e) => setNewProdSellingPrice(e.target.value)}
+                        className="w-full bg-emerald-950/40 border border-emerald-500 rounded-xl px-3.5 py-2.5 text-emerald-300 font-black text-sm outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Discount Preview */}
+                  {parseFloat(newProdMrp) > parseFloat(newProdSellingPrice) && parseFloat(newProdSellingPrice) > 0 && (
+                    <div className="bg-emerald-900/40 border border-emerald-500/50 rounded-xl px-3 py-1.5 inline-flex items-center gap-2 text-emerald-300 font-bold text-xs">
+                      <span>🎉</span>
+                      <span>
+                        ₹{parseFloat(newProdMrp) - parseFloat(newProdSellingPrice)} OFF ({Math.round(((parseFloat(newProdMrp) - parseFloat(newProdSellingPrice))/parseFloat(newProdMrp))*100)}% Discount)
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 5. Image Upload & Compression Section */}
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1.5">
+                      Product Photo (फोटो अपलोड या चुनें) *
+                    </label>
+
+                    <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 flex items-center gap-4 mb-3">
+                      <img
+                        src={newProdImage}
+                        alt="Preview"
+                        className="w-20 h-20 rounded-xl object-cover border border-slate-600 bg-slate-900 shrink-0"
+                      />
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <label className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer shadow transition inline-flex items-center gap-1.5">
+                            <span>📸</span>
+                            <span>Take Photo / Upload</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              onChange={handleNewProdFile}
+                              className="hidden"
+                            />
+                          </label>
+                          {isCompressingImage && (
+                            <span className="text-xs text-sky-400 font-bold animate-pulse">Compressing via Canvas...</span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono">{compressionReport}</div>
+                      </div>
+                    </div>
+
+                    {/* Quick Kirana Photo Presets */}
+                    <div className="text-slate-400 font-bold text-[11px] mb-1.5">Or tap popular kirana photo preset:</div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {KIRANA_DEMO_PRESETS.map(preset => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            setNewProdImage(preset.url);
+                            setNewProdPresetId(preset.id);
+                            if (!newProdLocalized && preset.hi) setNewProdLocalized(preset.hi);
+                          }}
+                          className={`p-1.5 rounded-xl border text-center transition ${
+                            newProdPresetId === preset.id
+                              ? 'bg-sky-950 border-sky-400 shadow'
+                              : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                          }`}
+                        >
+                          <img src={preset.url} alt={preset.label} className="w-full h-12 rounded-lg object-cover mb-1" />
+                          <div className="text-[10px] font-bold text-slate-200 truncate">{preset.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddProductModal(false)}
+                    className="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:text-white font-bold text-xs"
+                  >
+                    Cancel (रद्द करें)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveNewProduct}
+                    disabled={isCompressingImage}
+                    className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg transition active:scale-95"
+                  >
+                    ✨ Add to Store Catalog (स्टोर में जोड़ें)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<LiveDemoApp />);
+  </script>
+</body>
+</html>

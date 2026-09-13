@@ -1,0 +1,124 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // HELPER FUNCTIONS & AUTHENTICATION PREDICATES
+    // =========================================================================
+
+    // Checks if the user is authenticated with Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Checks if the user's UID matches the given user identifier
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Checks if the user holds an 'admin' or 'shopkeeper' role
+    // Supported via Custom Claims (request.auth.token.role) OR
+    // User document record fallback
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'admin' ||
+        request.auth.token.role == 'shopkeeper' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'shopkeeper'])
+      );
+    }
+
+    // Validates phone number format (+91 or 10 digits)
+    function isValidPhone(phone) {
+      return phone is string && phone.size() >= 10 && phone.size() <= 15;
+    }
+
+    // =========================================================================
+    // 1. USERS COLLECTION (/users/{userId})
+    // =========================================================================
+    // Stores: uid, phone_number, role (customer/admin), saved_addresses array
+    match /users/{userId} {
+      // User can read their own profile; Admin can read all customer records
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Customers can create/update their own profile (phone, addresses)
+      // Customers cannot elevate their own role to 'admin'
+      allow create: if isOwner(userId) && (
+        !request.resource.data.keys().hasAll(['role']) ||
+        request.resource.data.role == 'customer' ||
+        isAdmin()
+      );
+
+      allow update: if isOwner(userId) && (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) ||
+        isAdmin()
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 2. PRODUCTS COLLECTION (/products/{productId})
+    // =========================================================================
+    // Stores: product_id, name, name_localized, mrp, selling_price,
+    //         unit_size, image_url, is_in_stock, category
+    match /products/{productId} {
+      // Public / Customer Read: Any authenticated user can browse products
+      allow read: if isAuthenticated();
+
+      // Write Access: Strictly restricted to Shopkeeper / Admin
+      // Enables rapid stock toggling (is_in_stock) and pricing adjustments
+      allow create, update, delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 3. STORE CONFIGURATION (/store_config/{configId})
+    // =========================================================================
+    // Single document storing: is_store_open, free_delivery_threshold, delivery_fee
+    match /store_config/{configId} {
+      // Any authenticated user can read store hours, free delivery threshold, and status
+      allow read: if isAuthenticated();
+
+      // Only Shopkeeper / Admin can toggle store open/close or edit fees
+      allow create, update, delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 4. ORDERS COLLECTION (/orders/{orderId})
+    // =========================================================================
+    // Stores: order_id, customer_uid, customer_phone, items (snapshot),
+    //         total_amount, payment_method, status, created_at, delivery_address
+    match /orders/{orderId} {
+      // Customer can read only their own orders
+      // Admin / Shopkeeper can read all orders for fulfillment & live board
+      allow read: if (isAuthenticated() && resource.data.customer_uid == request.auth.uid) || isAdmin();
+
+      // Customer Order Creation Rules:
+      // 1. Must be authenticated
+      // 2. customer_uid in order document MUST match the caller's auth.uid
+      // 3. Initial status must strictly be 'RECEIVED'
+      // 4. Total amount must be positive
+      // 5. Must contain valid items snapshot, customer phone, and delivery address
+      allow create: if isAuthenticated() &&
+        request.resource.data.customer_uid == request.auth.uid &&
+        request.resource.data.status == 'RECEIVED' &&
+        request.resource.data.total_amount > 0 &&
+        request.resource.data.items is list &&
+        request.resource.data.items.size() > 0 &&
+        request.resource.data.payment_method in ['COD', 'UPI'] &&
+        isValidPhone(request.resource.data.customer_phone);
+
+      // Customer CANNOT modify orders once created (prevents tampering with
+      // prices, status, or items snapshot).
+      // ONLY Admin / Shopkeeper can advance status or update delivery partner info
+      allow update: if isAdmin() && (
+        // Allow status workflow transitions
+        request.resource.data.status in ['RECEIVED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED']
+      );
+
+      // Orders cannot be deleted by customers; only Admin may archive/delete
+      allow delete: if isAdmin();
+    }
+  }
+}

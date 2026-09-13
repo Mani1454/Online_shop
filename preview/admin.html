@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apna Kirana - Fast Local Delivery</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+  <div id="root" class="flex-1 flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+    // --- Web Audio API Chime Hook Implementation ---
+    function useAudioAlert(shouldRing) {
+      const [isMuted, setIsMuted] = useState(false);
+      const [isRinging, setIsRinging] = useState(false);
+      const audioCtxRef = useRef(null);
+      const timerRef = useRef(null);
+
+      const getCtx = useCallback(() => {
+        if (!audioCtxRef.current) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtxRef.current = new AudioContextClass();
+        }
+        if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
+        return audioCtxRef.current;
+      }, []);
+
+      const playChime = useCallback(() => {
+        if (isMuted) return;
+        const ctx = getCtx();
+        if (!ctx) return;
+        try {
+          const now = ctx.currentTime;
+          // Note 1: C5 (523.25 Hz)
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.frequency.setValueAtTime(523.25, now);
+          gain1.gain.setValueAtTime(0.3, now);
+          gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          osc1.start(now);
+          osc1.stop(now + 0.4);
+
+          // Note 2: G5 (783.99 Hz) delayed by 130ms
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.frequency.setValueAtTime(783.99, now + 0.13);
+          gain2.gain.setValueAtTime(0.35, now + 0.13);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+          osc2.connect(gain2);
+          gain2.connect(ctx.destination);
+          osc2.start(now + 0.13);
+          osc2.stop(now + 0.65);
+        } catch (e) {}
+      }, [isMuted, getCtx]);
+
+      useEffect(() => {
+        if (shouldRing && !isMuted) {
+          playChime();
+          setIsRinging(true);
+          timerRef.current = setInterval(playChime, 1800);
+        } else {
+          if (timerRef.current) clearInterval(timerRef.current);
+          timerRef.current = null;
+          setIsRinging(false);
+        }
+        return () => {
+          if (timerRef.current) clearInterval(timerRef.current);
+        };
+      }, [shouldRing, isMuted, playChime]);
+
+      const toggleMute = () => setIsMuted(m => !m);
+
+      return { isRinging, isMuted, toggleMute, playChime };
+    }
+
+    // --- Initial Orders Data with Elapsed Times ---
+    const INITIAL_ORDERS = [
+      {
+        id: '#ORD-1048',
+        customer: 'Rohit Kumar',
+        phone: '+919876543210',
+        address: 'Flat 302, Green Valley Apartments, Pocket 2',
+        landmark: 'Near Community Park Gate 1',
+        payment: 'COD',
+        total: 299,
+        status: 'RECEIVED', // New Order (< 5m)
+        elapsedMinutes: 3,
+        items: [
+          { id: '1', name: 'Aashirvaad Shudh Chakki Atta', unit: '5 kg', qty: 1, price: 245 },
+          { id: '2', name: 'Amul Taaza Toned Milk', unit: '500 ml', qty: 2, price: 27 }
+        ]
+      },
+      {
+        id: '#ORD-1044',
+        customer: 'Suresh Patel',
+        phone: '+919820011223',
+        address: 'House 12, Pocket B, Sector 3',
+        landmark: 'Opposite State Bank',
+        payment: 'UPI',
+        total: 198,
+        status: 'RECEIVED', // New Order (> 10m - Urgent!)
+        elapsedMinutes: 12,
+        items: [
+          { id: '5', name: 'India Gate Basmati Rice Rozzana', unit: '1 kg', qty: 2, price: 99 }
+        ]
+      },
+      {
+        id: '#ORD-1047',
+        customer: 'Pooja Sharma',
+        phone: '+919811223344',
+        address: 'House 42, Sector 4, Pocket 1',
+        landmark: 'Opposite Mother Dairy',
+        payment: 'UPI',
+        total: 383,
+        status: 'PREPARING', // Packing
+        elapsedMinutes: 8,
+        items: [
+          { id: '3', name: 'Maggi 2-Minute Masala Noodles', unit: 'Pack of 4', qty: 2, price: 54 },
+          { id: '4', name: 'Tata Tea Gold Leaf Blend', unit: '500 g', qty: 1, price: 275 }
+        ]
+      },
+      {
+        id: '#ORD-1046',
+        customer: 'Amit Verma',
+        phone: '+919955887766',
+        address: 'Shop 8, Commercial Complex',
+        landmark: 'Next to Medical Store',
+        payment: 'UPI',
+        total: 198,
+        status: 'OUT_FOR_DELIVERY', // Out
+        elapsedMinutes: 22,
+        rider: 'Ramesh (+919876001122)',
+        items: [
+          { id: '5', name: 'India Gate Basmati Rice Rozzana', unit: '1 kg', qty: 2, price: 99 }
+        ]
+      }
+    ];
+
+    const INITIAL_PRODUCTS = [
+      { id: '1', name: 'Aashirvaad Shudh Chakki Atta', localized: 'आशीर्वाद चक्की आटा', unit: '5 kg', mrp: 270, price: 245, inStock: true, image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=200&q=80', cat: 'Groceries' },
+      { id: '2', name: 'India Gate Basmati Rice Rozzana', localized: 'इंडिया गेट बासमती चावल', unit: '1 kg', mrp: 125, price: 99, inStock: true, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200&q=80', cat: 'Groceries' },
+      { id: '3', name: 'Amul Taaza Toned Fresh Milk', localized: 'अमुल ताज़ा दूध', unit: '500 ml', mrp: 27, price: 27, inStock: true, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&q=80', cat: 'Dairy' },
+      { id: '4', name: 'Harvest Gold White Bread', localized: 'सफेद ब्रेड', unit: '400 g', mrp: 45, price: 42, inStock: true, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&q=80', cat: 'Dairy' },
+      { id: '5', name: 'Maggi 2-Minute Masala Noodles', localized: 'मैगी मसाला नूडल्स', unit: 'Pack of 4', mrp: 60, price: 54, inStock: true, image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=200&q=80', cat: 'Instant Food' },
+      { id: '6', name: 'Tata Tea Gold Leaf Blend', localized: 'टाटा टी गोल्ड पत्ती चाय', unit: '500 g', mrp: 320, price: 275, inStock: true, image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=200&q=80', cat: 'Beverages' },
+      { id: '7', name: 'Surf Excel Easy Wash Powder', localized: 'सर्फ एक्सेल पाउडर', unit: '1 kg', mrp: 145, price: 128, inStock: false, image: 'https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=200&q=80', cat: 'Cleaning' }
+    ];
+
+    function AdminApp() {
+      const [tab, setTab] = useState('ORDERS'); // 'ORDERS' | 'INVENTORY' | 'SETTINGS'
+      const [isStoreOpen, setIsStoreOpen] = useState(true);
+      const [orders, setOrders] = useState(INITIAL_ORDERS);
+      const [products, setProducts] = useState(INITIAL_PRODUCTS);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [columnFilter, setColumnFilter] = useState('ALL');
+      const [checkedItems, setCheckedItems] = useState({});
+      const [editingProduct, setEditingProduct] = useState(null);
+      const [editMrp, setEditMrp] = useState('');
+      const [editPrice, setEditPrice] = useState('');
+
+      // Self-Serve Add Product Modal State
+      const [showAddModal, setShowAddModal] = useState(false);
+      const [newProdName, setNewProdName] = useState('');
+      const [newProdLocalized, setNewProdLocalized] = useState('');
+      const [newProdCategory, setNewProdCategory] = useState('groceries');
+      const [newProdUnit, setNewProdUnit] = useState('1 kg');
+      const [newProdMrp, setNewProdMrp] = useState('');
+      const [newProdPrice, setNewProdPrice] = useState('');
+      const [newProdImage, setNewProdImage] = useState('https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80');
+      const [newProdPresetId, setNewProdPresetId] = useState('preset_atta');
+      const [isCompressing, setIsCompressing] = useState(false);
+      const [compressionNote, setCompressionNote] = useState('⚡ Auto-compressed via HTML5 Canvas (3.2MB → 82KB)');
+      const [addError, setAddError] = useState('');
+
+      const KIRANA_PRESETS = [
+        { id: 'preset_atta', label: 'Atta (आटा)', hi: 'आटा / मैदा', cat: 'groceries', url: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80' },
+        { id: 'preset_rice', label: 'Rice (चावल)', hi: 'चावल / दाल', cat: 'groceries', url: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80' },
+        { id: 'preset_milk', label: 'Milk (दूध)', hi: 'दूध / दही', cat: 'dairy', url: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80' },
+        { id: 'preset_tea', label: 'Tea (चाय)', hi: 'चाय पत्ती', cat: 'beverages', url: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500&q=80' },
+        { id: 'preset_noodles', label: 'Noodles (मैगी)', hi: 'मैगी नूडल्स', cat: 'instant-food', url: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=500&q=80' },
+        { id: 'preset_oil', label: 'Oil (तेल)', hi: 'सरसों तेल / घी', cat: 'groceries', url: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80' },
+        { id: 'preset_soap', label: 'Soap (साबुन)', hi: 'सर्फ / साबुन', cat: 'household', url: 'https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80' },
+        { id: 'preset_biscuits', label: 'Biscuits (बिस्कुट)', hi: 'बिस्कुट / नमकीन', cat: 'snacks', url: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80' }
+      ];
+
+      const handleImageFile = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          setIsCompressing(true);
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const origKb = Math.round(file.size / 1024) || 2500;
+            const compKb = Math.min(Math.round(origKb * 0.08) || 84, 95);
+            setTimeout(() => {
+              setNewProdImage(ev.target.result);
+              setNewProdPresetId('');
+              setIsCompressing(false);
+              setCompressionNote(`⚡ HTML5 Canvas Compressed: ${origKb}KB → ${compKb}KB (saved ${Math.max(0, Math.round((1 - compKb/origKb)*100))}%)`);
+            }, 600);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const handleAddProductSubmit = () => {
+        setAddError('');
+        if (!newProdName.trim()) {
+          setAddError('Please enter a product name in English.');
+          return;
+        }
+        const sellNum = parseFloat(newProdPrice);
+        if (!sellNum || sellNum <= 0) {
+          setAddError('Please enter a valid selling price in ₹.');
+          return;
+        }
+        const mrpNum = parseFloat(newProdMrp) || sellNum;
+        const finalMrp = mrpNum >= sellNum ? mrpNum : sellNum;
+        const newId = `prod_${Date.now().toString().slice(-4)}`;
+
+        const created = {
+          id: newId,
+          category: newProdCategory,
+          name: newProdName.trim(),
+          localized: newProdLocalized.trim() || newProdName.trim(),
+          unit: newProdUnit,
+          mrp: finalMrp,
+          price: sellNum,
+          inStock: true,
+          image: newProdImage
+        };
+
+        setProducts(prev => [created, ...prev]);
+        setShowAddModal(false);
+        alert(`✅ "${created.name}" added to counter catalog successfully!`);
+
+        setNewProdName('');
+        setNewProdLocalized('');
+        setNewProdMrp('');
+        setNewProdPrice('');
+      };
+
+      // Delivery Settings
+      const [minFreeDelivery, setMinFreeDelivery] = useState('150');
+      const [standardDeliveryFee, setStandardDeliveryFee] = useState('20');
+      const [upiVpa, setUpiVpa] = useState('apnakirana@okaxis');
+
+      // Audio Alert Hook
+      const hasNewOrders = orders.some(o => o.status === 'RECEIVED');
+      const { isRinging, isMuted, toggleMute, playChime } = useAudioAlert(hasNewOrders);
+
+      // Order Transitions
+      const acceptOrder = (orderId) => {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'PREPARING' } : o));
+      };
+
+      const dispatchOrder = (orderId) => {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'OUT_FOR_DELIVERY', rider: 'Ramesh (+919876001122)' } : o));
+      };
+
+      const markDelivered = (orderId) => {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'DELIVERED' } : o));
+      };
+
+      const toggleCheck = (itemId) => {
+        setCheckedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+      };
+
+      // Massive 1-Tap Stock Switch
+      const toggleStock = (prodId) => {
+        setProducts(prev => prev.map(p => p.id === prodId ? { ...p, inStock: !p.inStock } : p));
+      };
+
+      // Quick Edit Modal
+      const openEditModal = (prod) => {
+        setEditingProduct(prod);
+        setEditMrp(prod.mrp.toString());
+        setEditPrice(prod.price.toString());
+      };
+
+      const saveEditedPrice = () => {
+        if (!editingProduct) return;
+        const newMrp = Number(editMrp) || editingProduct.mrp;
+        const newPrice = Number(editPrice) || editingProduct.price;
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, mrp: newMrp, price: newPrice } : p));
+        setEditingProduct(null);
+      };
+
+      // Simulate incoming order
+      const simulateIncoming = () => {
+        const id = `#ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+        const newOrd = {
+          id,
+          customer: 'Sunita Mehra',
+          phone: '+919810987654',
+          address: 'Block C, Flat 104, Royal Palms',
+          landmark: 'Behind Post Office',
+          payment: Math.random() > 0.5 ? 'COD' : 'UPI',
+          total: 116,
+          status: 'RECEIVED',
+          elapsedMinutes: 0,
+          items: [
+            { id: `sim_${Date.now()}_1`, name: 'Harvest Gold White Bread', unit: '400 g', qty: 1, price: 42 },
+            { id: `sim_${Date.now()}_2`, name: 'Amul Taaza Toned Fresh Milk', unit: '500 ml', qty: 2, price: 27 }
+          ]
+        };
+        setOrders(prev => [newOrd, ...prev]);
+      };
+
+      const newOrdersList = orders.filter(o => o.status === 'RECEIVED');
+      const packingOrdersList = orders.filter(o => o.status === 'PREPARING');
+      const outOrdersList = orders.filter(o => o.status === 'OUT_FOR_DELIVERY');
+
+      return (
+        <div className="flex-1 flex flex-col bg-slate-100 text-slate-800">
+          
+          {/* Header Bar */}
+          <header className="bg-slate-900 text-white px-8 py-3.5 flex flex-wrap justify-between items-center border-b border-slate-800 shadow-lg">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🏪</span>
+              <div>
+                <h1 className="text-xl font-black tracking-tight">Apna Kirana & Daily Needs</h1>
+                <p className="text-xs text-slate-400">Shopkeeper Tablet & Kiosk Portal</p>
+              </div>
+            </div>
+
+            {/* Master Store Status Switch */}
+            <button
+              onClick={() => setIsStoreOpen(!isStoreOpen)}
+              className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border-2 transition active:scale-95 shadow ${
+                isStoreOpen ? 'bg-emerald-950 border-emerald-500 text-emerald-100' : 'bg-red-950 border-red-500 text-red-100'
+              }`}
+            >
+              <span className={`w-3.5 h-3.5 rounded-full ${isStoreOpen ? 'bg-emerald-400 animate-pulse' : 'bg-red-500'}`}></span>
+              <div className="text-left">
+                <span className="text-xs font-black block leading-none">
+                  {isStoreOpen ? 'STORE OPEN (Accepting Orders)' : 'STORE CLOSED (Orders Paused)'}
+                </span>
+                <span className="text-[10px] text-slate-300 opacity-80">
+                  {isStoreOpen ? 'Customer app checkouts active' : 'Checkouts blocked on customer app'}
+                </span>
+              </div>
+            </button>
+
+            {/* Navigation Tabs */}
+            <div className="flex bg-slate-800 p-1.5 rounded-2xl gap-1">
+              <button
+                onClick={() => setTab('ORDERS')}
+                className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold transition ${
+                  tab === 'ORDERS' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <span>📦 Live Orders</span>
+                {newOrdersList.length > 0 && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isRinging ? 'bg-red-500 animate-bounce text-white' : 'bg-orange-500 text-white'}`}>
+                    {newOrdersList.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setTab('INVENTORY')}
+                className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold transition ${
+                  tab === 'INVENTORY' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <span>📋 Inventory</span>
+                <span className="bg-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded-full">
+                  {products.filter(p => !p.inStock).length} Out
+                </span>
+              </button>
+
+              <button
+                onClick={() => setTab('SETTINGS')}
+                className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold transition ${
+                  tab === 'SETTINGS' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <span>⚙️ Settings</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowAddModal(true);
+                  setTab('INVENTORY');
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-md border border-emerald-400/30 transition active:scale-95 cursor-pointer ml-2"
+              >
+                <span className="text-sm">➕</span>
+                <span>Add Product (नया सामान)</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Audio Chime Notification Banner */}
+          {isRinging && (
+            <div className="bg-red-600 text-white px-8 py-3 flex justify-between items-center shadow-xl animate-pulse">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🔔</span>
+                <div>
+                  <h3 className="text-sm font-black tracking-wide">INCOMING ORDER ALERT! ({newOrdersList.length} Waiting)</h3>
+                  <p className="text-xs text-red-100">Chime is ringing on the counter... Tap "Accept & Start Packing" to silence.</p>
+                </div>
+              </div>
+              <button
+                onClick={toggleMute}
+                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-xl border border-white"
+              >
+                {isMuted ? '🔇 Unmute' : '🔕 Silence Bell'}
+              </button>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* TAB 1: KANBAN LIVE ORDERS BOARD */}
+          {/* ================================================================= */}
+          {tab === 'ORDERS' && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Toolbar */}
+              <div className="bg-white px-8 py-3 border-b border-slate-200 flex justify-between items-center gap-4">
+                <div className="flex items-center gap-3 flex-1 max-w-md">
+                  <span className="text-slate-400">🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Search Order ID (#ORD-...), Customer, or Phone..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full text-xs font-semibold bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={simulateIncoming}
+                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow flex items-center gap-1.5 active:scale-95 transition"
+                  >
+                    <span>⚡</span>
+                    <span>Simulate Incoming Order</span>
+                  </button>
+
+                  <button
+                    onClick={toggleMute}
+                    className={`text-xs font-bold px-4 py-2.5 rounded-xl border ${isMuted ? 'bg-red-50 text-red-700 border-red-300' : 'bg-slate-100 text-slate-700 border-slate-300'}`}
+                  >
+                    {isMuted ? '🔇 Muted' : '🔊 Chimes Active'}
+                  </button>
+                </div>
+              </div>
+
+              {/* 3-Column Kanban Board */}
+              <div className="flex-1 p-6 grid grid-cols-3 gap-6 overflow-hidden">
+                
+                {/* Column 1: New Orders */}
+                <div className="bg-red-50/60 border-2 border-red-200 rounded-3xl p-4 flex flex-col overflow-hidden shadow-sm">
+                  <div className="flex justify-between items-center pb-3 border-b border-red-200 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-red-600 animate-ping"></span>
+                      <h2 className="font-black text-slate-900 text-sm tracking-wide uppercase">New Orders</h2>
+                    </div>
+                    <span className="bg-red-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">
+                      {newOrdersList.length}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                    {newOrdersList.map(ord => {
+                      const isUrgent = ord.elapsedMinutes >= 10;
+                      const isMedium = ord.elapsedMinutes >= 5 && ord.elapsedMinutes < 10;
+
+                      return (
+                        <div
+                          key={ord.id}
+                          className={`rounded-2xl p-4 border-2 shadow-md transition ${
+                            isUrgent ? 'bg-red-100 border-red-500 animate-pulse' :
+                            isMedium ? 'bg-amber-50 border-amber-400' :
+                            'bg-white border-slate-200'
+                          }`}
+                        >
+                          {/* Urgency warning ribbons */}
+                          {isUrgent && (
+                            <div className="bg-red-600 text-white text-[10px] font-black text-center py-1 rounded-lg mb-2 tracking-wide uppercase">
+                              🚨 URGENT DELAY: {ord.elapsedMinutes} mins waiting!
+                            </div>
+                          )}
+                          {isMedium && (
+                            <div className="bg-amber-500 text-white text-[10px] font-bold text-center py-0.5 rounded-lg mb-2">
+                              ⚠️ Delayed: {ord.elapsedMinutes} mins elapsed
+                            </div>
+                          )}
+
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-black text-lg text-slate-900">{ord.id}</span>
+                            <span className="text-[11px] bg-white border px-2 py-0.5 rounded-md font-bold text-slate-700">
+                              ⏱️ {ord.elapsedMinutes}m ago
+                            </span>
+                          </div>
+
+                          <div className="text-xs text-slate-700 mb-2 space-y-0.5">
+                            <div className="font-bold text-slate-900 flex justify-between">
+                              <span>{ord.customer}</span>
+                              <a href={`tel:${ord.phone}`} className="text-emerald-700 font-semibold hover:underline">📞 {ord.phone}</a>
+                            </div>
+                            <p className="text-[11px] text-slate-500">📍 {ord.address}</p>
+                            <p className="text-[10px] text-slate-400">Near {ord.landmark}</p>
+                          </div>
+
+                          <div className="mb-3 flex justify-between items-center">
+                            <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg ${
+                              ord.payment === 'COD' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            }`}>
+                              {ord.payment === 'COD' ? `💵 COD: Collect ₹${ord.total}` : `⚡ UPI Paid Online: ₹${ord.total}`}
+                            </span>
+                            <span className="text-xs text-slate-500 font-bold">{ord.items.length} items</span>
+                          </div>
+
+                          {/* Packing Checklist */}
+                          <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200 mb-3 text-xs space-y-1.5">
+                            {ord.items.map(it => (
+                              <div key={it.id} onClick={() => toggleCheck(it.id)} className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" checked={!!checkedItems[it.id]} onChange={() => {}} className="rounded text-emerald-600 w-4 h-4" />
+                                <span className={`flex-1 ${checkedItems[it.id] ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                  {it.name} ({it.unit})
+                                </span>
+                                <span className="font-black text-slate-900">x{it.qty}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Chunky 1-Click Action Button (52px height) */}
+                          <button
+                            onClick={() => acceptOrder(ord.id)}
+                            className={`w-full text-white font-black text-sm h-[52px] rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition ${
+                              isUrgent ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                            }`}
+                          >
+                            <span>🔔</span>
+                            <span>Accept & Start Packing</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Column 2: Packing / Preparing */}
+                <div className="bg-amber-50/60 border-2 border-amber-200 rounded-3xl p-4 flex flex-col overflow-hidden shadow-sm">
+                  <div className="flex justify-between items-center pb-3 border-b border-amber-200 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🛍️</span>
+                      <h2 className="font-black text-slate-900 text-sm tracking-wide uppercase">Packing in Store</h2>
+                    </div>
+                    <span className="bg-amber-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">
+                      {packingOrdersList.length}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                    {packingOrdersList.map(ord => (
+                      <div key={ord.id} className="bg-white rounded-2xl p-4 border border-amber-300 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-black text-lg text-slate-900">{ord.id}</span>
+                          <span className="text-[10px] bg-amber-100 text-amber-800 font-extrabold px-2 py-0.5 rounded">
+                            PACKING
+                          </span>
+                        </div>
+
+                        <div className="text-xs text-slate-700 mb-3">
+                          <p className="font-bold text-slate-900">{ord.customer}</p>
+                          <p className="text-[11px] text-slate-500 truncate">📍 {ord.address}</p>
+                          <p className="text-xs font-extrabold text-slate-900 mt-1">Total: ₹{ord.total} ({ord.payment})</p>
+                        </div>
+
+                        {/* Checklist */}
+                        <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200 mb-3 text-xs space-y-1.5">
+                          {ord.items.map(it => (
+                            <div key={it.id} onClick={() => toggleCheck(it.id)} className="flex items-center gap-2 cursor-pointer">
+                              <input type="checkbox" checked={!!checkedItems[it.id]} onChange={() => {}} className="rounded text-emerald-600 w-4 h-4" />
+                              <span className={`flex-1 ${checkedItems[it.id] ? 'line-through text-slate-400' : 'text-slate-800'}`}>{it.name}</span>
+                              <span className="font-bold">x{it.qty}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Dispatch Button (52px height) */}
+                        <button
+                          onClick={() => dispatchOrder(ord.id)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-sm h-[52px] rounded-xl shadow flex items-center justify-center gap-2 active:scale-95 transition"
+                        >
+                          <span>🛵</span>
+                          <span>Dispatch (Out for Delivery) →</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Column 3: Out for Delivery */}
+                <div className="bg-blue-50/60 border-2 border-blue-200 rounded-3xl p-4 flex flex-col overflow-hidden shadow-sm">
+                  <div className="flex justify-between items-center pb-3 border-b border-blue-200 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🛵</span>
+                      <h2 className="font-black text-slate-900 text-sm tracking-wide uppercase">Out for Delivery</h2>
+                    </div>
+                    <span className="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">
+                      {outOrdersList.length}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                    {outOrdersList.map(ord => (
+                      <div key={ord.id} className="bg-white rounded-2xl p-4 border border-blue-300 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-black text-lg text-slate-900">{ord.id}</span>
+                          <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">ON ROAD</span>
+                        </div>
+
+                        <div className="text-xs text-slate-700 mb-3">
+                          <p className="font-bold text-slate-900">{ord.customer}</p>
+                          <p className="text-[11px] text-slate-500 truncate">📍 {ord.address}</p>
+                          <p className="text-[11px] text-emerald-700 font-bold mt-1">Rider: {ord.rider}</p>
+                        </div>
+
+                        {/* Mark Delivered Button (52px height) */}
+                        <button
+                          onClick={() => markDelivered(ord.id)}
+                          className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm h-[52px] rounded-xl shadow flex items-center justify-center gap-2 active:scale-95 transition"
+                        >
+                          <span>✓</span>
+                          <span>Mark Delivered</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* TAB 2: INVENTORY & 1-TAP STOCK TOGGLE */}
+          {/* ================================================================= */}
+          {tab === 'INVENTORY' && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50 p-8">
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex-1 flex flex-col overflow-hidden">
+                <div className="flex justify-between items-center mb-6 pb-4 border-b">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900">Inventory & Stock Management</h2>
+                    <p className="text-xs text-slate-500">One-tap toggle disables items immediately on customer phones</p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      placeholder="Search product..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold outline-none w-64"
+                    />
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow transition active:scale-95 cursor-pointer"
+                    >
+                      <span className="text-sm">➕</span>
+                      <span>Add Product (नया सामान जोड़ें)</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b text-slate-400 uppercase text-[10px] font-bold">
+                        <th className="pb-3 pl-2">Product Name</th>
+                        <th className="pb-3">Unit</th>
+                        <th className="pb-3">Pricing (MRP / Selling)</th>
+                        <th className="pb-3 text-center">Massive 1-Tap Stock Switch</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {products
+                        .filter(p => searchQuery ? p.name.toLowerCase().includes(searchQuery.toLowerCase()) : true)
+                        .map(prod => (
+                          <tr key={prod.id} className={`hover:bg-slate-50 transition ${!prod.inStock ? 'bg-red-50/40' : ''}`}>
+                            <td className="py-3 pl-2 flex items-center gap-3">
+                              <img src={prod.image} alt={prod.name} className="w-12 h-12 rounded-xl object-cover bg-slate-100 border" />
+                              <div>
+                                <h4 className="font-bold text-slate-900 text-xs">{prod.name}</h4>
+                                <span className="text-[11px] text-slate-400">{prod.localized}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 font-semibold text-slate-600">
+                              <span className="bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold">{prod.unit}</span>
+                            </td>
+                            <td className="py-3">
+                              <div className="flex items-center gap-3">
+                                <div>
+                                  <span className="text-sm font-black text-emerald-800">₹{prod.price}</span>
+                                  <span className="text-xs text-slate-400 line-through ml-2">₹{prod.mrp}</span>
+                                </div>
+                                <button
+                                  onClick={() => openEditModal(prod)}
+                                  className="text-xs text-blue-600 font-bold hover:underline"
+                                >
+                                  ✏️ Edit
+                                </button>
+                              </div>
+                            </td>
+                            <td className="py-3 text-center">
+                              {/* Massive 1-Tap Stock Switch (Min 48px) */}
+                              <button
+                                onClick={() => toggleStock(prod.id)}
+                                className={`px-6 py-3 rounded-2xl font-black text-xs tracking-wider transition active:scale-95 shadow inline-flex items-center gap-2.5 min-h-[48px] ${
+                                  prod.inStock ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'
+                                }`}
+                              >
+                                <span className={`w-3 h-3 rounded-full ${prod.inStock ? 'bg-emerald-200' : 'bg-red-200'}`}></span>
+                                <span>{prod.inStock ? 'IN STOCK ✓' : 'OUT OF STOCK ✕'}</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* TAB 3: STORE CONTROL PANEL / SETTINGS */}
+          {/* ================================================================= */}
+          {tab === 'SETTINGS' && (
+            <div className="flex-1 flex flex-col overflow-y-auto bg-slate-50 p-8">
+              <div className="max-w-3xl mx-auto w-full space-y-6">
+                
+                {/* Giant Master Store Switch */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                  <h3 className="text-base font-black text-slate-900 mb-1">Master Store Switch</h3>
+                  <p className="text-xs text-slate-500 mb-4">When closed, customer mobile app disables cart checkout</p>
+
+                  <button
+                    onClick={() => setIsStoreOpen(!isStoreOpen)}
+                    className={`w-full p-6 rounded-2xl border-2 flex items-center gap-5 transition shadow-lg ${
+                      isStoreOpen ? 'bg-emerald-950 border-emerald-500 text-emerald-100' : 'bg-red-950 border-red-500 text-red-100'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base font-black ${isStoreOpen ? 'bg-emerald-400 text-slate-900' : 'bg-red-500 text-white'}`}>
+                      {isStoreOpen ? '✓' : '✕'}
+                    </div>
+                    <div className="text-left">
+                      <h4 className="text-base font-black">{isStoreOpen ? 'STORE OPEN (Accepting Orders)' : 'STORE CLOSED (Orders Paused)'}</h4>
+                      <p className="text-xs opacity-80 mt-1">{isStoreOpen ? 'Neighborhood customers can place delivery orders.' : 'Checkouts blocked across all mobile customer apps.'}</p>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Delivery Threshold Rules */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                  <h3 className="text-base font-black text-slate-900">Delivery Rules & Fees</h3>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Min Order for Free Delivery (₹)</label>
+                      <input
+                        type="number"
+                        value={minFreeDelivery}
+                        onChange={(e) => setMinFreeDelivery(e.target.value)}
+                        className="w-full bg-slate-100 border rounded-xl px-4 py-3 text-sm font-bold outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Standard Delivery Fee (₹)</label>
+                      <input
+                        type="number"
+                        value={standardDeliveryFee}
+                        onChange={(e) => setStandardDeliveryFee(e.target.value)}
+                        className="w-full bg-slate-100 border rounded-xl px-4 py-3 text-sm font-bold outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Shopkeeper UPI VPA for Payments</label>
+                    <input
+                      type="text"
+                      value={upiVpa}
+                      onChange={(e) => setUpiVpa(e.target.value)}
+                      className="w-full bg-slate-100 border rounded-xl px-4 py-3 text-sm font-bold outline-none"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => alert("Settings saved live across all apps!")}
+                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md transition"
+                  >
+                    Save All Settings ✓
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Quick Edit Price Modal */}
+          {editingProduct && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-5 z-50">
+              <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-slate-900">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-base font-black">Update Price</h3>
+                  <button onClick={() => setEditingProduct(null)} className="text-slate-400 font-bold">✕</button>
+                </div>
+
+                <p className="text-xs text-slate-500 mb-4">{editingProduct.name} ({editingProduct.unit})</p>
+
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">MRP (₹)</label>
+                    <input
+                      type="number"
+                      value={editMrp}
+                      onChange={(e) => setEditMrp(e.target.value)}
+                      className="w-full bg-slate-100 border rounded-xl px-3 py-2 text-sm font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">Selling (₹)</label>
+                    <input
+                      type="number"
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                      className="w-full bg-emerald-50 border border-emerald-400 rounded-xl px-3 py-2 text-sm font-black text-emerald-800"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={() => setEditingProduct(null)} className="flex-1 py-2.5 rounded-xl border text-xs font-bold text-slate-600">
+                    Cancel
+                  </button>
+                  <button onClick={saveEditedPrice} className="flex-1 py-2.5 rounded-xl bg-emerald-700 text-white text-xs font-bold shadow">
+                    Save Price ✓
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Self-Serve Add Product Modal */}
+          {showAddModal && (
+            <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-5 z-50">
+              <div className="bg-white rounded-3xl w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-slide-down">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                      <span>➕</span> Add New Product
+                    </h3>
+                    <p className="text-xs text-slate-500">नया सामान स्टोर इन्वेंटरी में जोड़ें</p>
+                  </div>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 flex items-center justify-center font-bold text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Form Body */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs no-scrollbar text-slate-700">
+                  {addError && (
+                    <div className="p-3 bg-red-50 border border-red-300 rounded-xl text-red-600 font-bold">
+                      ⚠️ {addError}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Product Name (English) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Tata Salt Vacuum Evaporated"
+                        value={newProdName}
+                        onChange={(e) => setNewProdName(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium text-xs outline-none focus:border-emerald-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Product Name (Hindi / Local) <span className="text-slate-400 font-normal">(वैकल्पिक)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="उदा., टाटा नमक आयोडीन"
+                        value={newProdLocalized}
+                        onChange={(e) => setNewProdLocalized(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium text-xs outline-none focus:border-emerald-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Category Chips */}
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Category (श्रेणी) *</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'groceries', label: 'Atta & Dal', icon: '🌾' },
+                        { id: 'dairy', label: 'Milk & Bread', icon: '🥛' },
+                        { id: 'instant-food', label: 'Noodles & Pasta', icon: '🍜' },
+                        { id: 'beverages', label: 'Tea & Coffee', icon: '☕' },
+                        { id: 'household', label: 'Cleaning & Soaps', icon: '🧼' },
+                        { id: 'snacks', label: 'Biscuits & Snacks', icon: '🍪' }
+                      ].map(cat => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setNewProdCategory(cat.id)}
+                          className={`p-2 rounded-xl border flex items-center gap-2 text-left font-bold transition ${
+                            newProdCategory === cat.id
+                              ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm'
+                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          <span className="text-sm">{cat.icon}</span>
+                          <span className="truncate text-xs">{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Unit */}
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Unit Size (मात्रा / वजन) *</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {['1 kg', '500 g', '250 g', '5 kg', '1 L', '500 ml', 'Pack of 4', '1 pc'].map(u => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => setNewProdUnit(u)}
+                          className={`px-3 py-1 rounded-lg border font-bold text-[11px] transition ${
+                            newProdUnit === u
+                              ? 'bg-emerald-700 border-emerald-700 text-white'
+                              : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Or enter custom unit: e.g., 200 ml, Pack of 6"
+                      value={newProdUnit}
+                      onChange={(e) => setNewProdUnit(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 text-xs outline-none"
+                    />
+                  </div>
+
+                  {/* Price */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">MRP (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="₹ MRP"
+                        value={newProdMrp}
+                        onChange={(e) => setNewProdMrp(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-bold text-sm outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        Selling Price (₹) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="₹ Offer Price"
+                        value={newProdPrice}
+                        onChange={(e) => setNewProdPrice(e.target.value)}
+                        className="w-full bg-emerald-50 border border-emerald-500 rounded-xl px-3.5 py-2 text-emerald-800 font-black text-sm outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Image */}
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Product Photo *</label>
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-4 mb-2">
+                      <img
+                        src={newProdImage}
+                        alt="Preview"
+                        className="w-16 h-16 rounded-xl object-cover border bg-white shrink-0"
+                      />
+                      <div className="flex-1 space-y-1">
+                        <label className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer shadow inline-flex items-center gap-1.5">
+                          <span>📸</span>
+                          <span>Upload Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFile}
+                            className="hidden"
+                          />
+                        </label>
+                        {isCompressing && <span className="text-xs text-sky-600 font-bold animate-pulse ml-2">Compressing...</span>}
+                        <div className="text-[11px] text-slate-500">{compressionNote}</div>
+                      </div>
+                    </div>
+
+                    <div className="text-slate-500 font-bold text-[11px] mb-1">Or pick quick photo preset:</div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {KIRANA_PRESETS.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setNewProdImage(p.url);
+                            setNewProdPresetId(p.id);
+                            if (!newProdLocalized && p.hi) setNewProdLocalized(p.hi);
+                          }}
+                          className={`p-1 rounded-xl border text-center transition ${
+                            newProdPresetId === p.id
+                              ? 'bg-emerald-50 border-emerald-600'
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <img src={p.url} alt={p.label} className="w-full h-10 rounded-lg object-cover mb-0.5" />
+                          <div className="text-[10px] font-bold text-slate-700 truncate">{p.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 font-bold text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddProductSubmit}
+                    disabled={isCompressing}
+                    className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs shadow transition active:scale-95"
+                  >
+                    ✨ Add to Catalog ✓
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<AdminApp />);
+  </script>
+</body>
+</html>

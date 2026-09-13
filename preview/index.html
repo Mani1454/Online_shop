@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Apna Kirana - Fast Local Delivery</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    const MOCK_STORE = {
+      name: "Apna Kirana",
+      isOpen: true,
+      deliveryTime: "15-25 mins",
+      minFreeDelivery: 150,
+      standardFee: 20,
+      vpa: "apnakirana@okaxis",
+      phone: "+919876543210"
+    };
+
+    const MOCK_CATEGORIES = [
+      { id: 'groceries', name: 'Atta, Rice & Dal', localized: 'अनाज व दालें', icon: '🌾', bg: '#FEF3C7' },
+      { id: 'dairy', name: 'Milk & Bread', localized: 'दूध व ब्रेड', icon: '🥛', bg: '#E0F2FE' },
+      { id: 'oils-masalas', name: 'Oil & Spices', localized: 'तेल व मसाले', icon: '🌶️', bg: '#FEE2E2' },
+      { id: 'snacks', name: 'Snacks & Biscuits', localized: 'नमकीन व बिस्कुट', icon: '🍪', bg: '#FFEDD5' },
+      { id: 'beverages', name: 'Tea & Cold Drinks', localized: 'चाय व कोल्ड ड्रिंक्स', icon: '☕', bg: '#DCFCE7' },
+      { id: 'household', name: 'Cleaners & Soaps', localized: 'सफाई का सामान', icon: '🧼', bg: '#F3E8FF' },
+      { id: 'personal-care', name: 'Shampoo & Paste', localized: 'व्यक्तिगत देखभाल', icon: '🧴', bg: '#FCE7F3' },
+      { id: 'instant-food', name: 'Maggi & Noodles', localized: 'मैगी व नूडल्स', icon: '🍜', bg: '#FEF9C3' },
+    ];
+
+    const MOCK_PRODUCTS = [
+      { id: '1', categoryId: 'groceries', name: 'Aashirvaad Shudh Chakki Atta', localized: 'आशीर्वाद चक्की आटा', unit: '5 kg', mrp: 270, sellingPrice: 245, discountPercent: 9, isInStock: true, image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80', tags: ['Daily Essential', 'Bestseller'] },
+      { id: '2', categoryId: 'groceries', name: 'India Gate Basmati Rice Rozzana', localized: 'इंडिया गेट बासमती चावल', unit: '1 kg', mrp: 125, sellingPrice: 99, discountPercent: 21, isInStock: true, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&q=80', tags: ['Daily Essential'] },
+      { id: '3', categoryId: 'dairy', name: 'Amul Taaza Toned Fresh Milk', localized: 'अमुल ताज़ा दूध', unit: '500 ml', mrp: 27, sellingPrice: 27, discountPercent: 0, isInStock: true, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80', tags: ['Daily Essential'] },
+      { id: '4', categoryId: 'dairy', name: 'Harvest Gold White Bread', localized: 'सफेद ब्रेड', unit: '400 g', mrp: 45, sellingPrice: 42, discountPercent: 7, isInStock: true, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80', tags: ['Breakfast'] },
+      { id: '5', categoryId: 'instant-food', name: 'Maggi 2-Minute Masala Noodles', localized: 'मैगी मसाला नूडल्स', unit: 'Pack of 4', mrp: 60, sellingPrice: 54, discountPercent: 10, isInStock: true, image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&q=80', tags: ['Bestseller'] },
+      { id: '6', categoryId: 'beverages', name: 'Tata Tea Gold Leaf Blend', localized: 'टाटा टी गोल्ड पत्ती चाय', unit: '500 g', mrp: 320, sellingPrice: 275, discountPercent: 14, isInStock: true, image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&q=80', tags: ['Daily Essential'] },
+      { id: '7', categoryId: 'household', name: 'Surf Excel Easy Wash Powder', localized: 'सर्फ एक्सेल पाउडर', unit: '1 kg', mrp: 145, sellingPrice: 128, discountPercent: 12, isInStock: false, image: 'https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=400&q=80', tags: ['Cleaning'] }
+    ];
+
+    const INITIAL_PAST_ORDERS = [
+      {
+        id: '#ORD-1045',
+        date: 'Yesterday, 6:30 PM',
+        total: 299,
+        payment: 'UPI Paid Online',
+        status: 'DELIVERED',
+        items: [
+          { id: '1', name: 'Aashirvaad Shudh Chakki Atta', unit: '5 kg', qty: 1, price: 245 },
+          { id: '3', name: 'Amul Taaza Toned Fresh Milk', unit: '500 ml', qty: 2, price: 27 }
+        ]
+      },
+      {
+        id: '#ORD-1039',
+        date: '10 Sep, 11:15 AM',
+        total: 153,
+        payment: 'Cash on Delivery',
+        status: 'DELIVERED',
+        items: [
+          { id: '5', name: 'Maggi 2-Minute Masala Noodles', unit: 'Pack of 4', qty: 2, price: 54 },
+          { id: '4', name: 'Harvest Gold White Bread', unit: '400 g', qty: 1, price: 42 }
+        ]
+      }
+    ];
+
+    const STEPS = [
+      { id: 'RECEIVED', title: 'Order Received', localized: 'ऑर्डर प्राप्त हुआ', icon: '✓', desc: 'Shopkeeper confirmed order' },
+      { id: 'PREPARING', title: 'Packing in Store', localized: 'सामान पैक हो रहा है', icon: '📦', desc: 'Packing your grocery bag fresh' },
+      { id: 'OUT_FOR_DELIVERY', title: 'Out for Delivery', localized: 'रास्ते में है', icon: '🛵', desc: 'Rider is on the scooter' },
+      { id: 'DELIVERED', title: 'Delivered', localized: 'डिलीवर हो गया', icon: '🏠', desc: 'Handed over at your doorstep' }
+    ];
+
+    function App() {
+      const [screen, setScreen] = useState('HOME'); // 'HOME' | 'CART' | 'CHECKOUT' | 'TRACKING' | 'HISTORY'
+      const [cart, setCart] = useState({ '1': 1, '3': 2 });
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedCategory, setSelectedCategory] = useState(null);
+      const [orderHistory, setOrderHistory] = useState(INITIAL_PAST_ORDERS);
+      const [activeOrder, setActiveOrder] = useState(null);
+      const [activeStepIndex, setActiveStepIndex] = useState(1); // Demo step index (Packing)
+      const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+      const [showReceiptModal, setShowReceiptModal] = useState(false);
+
+      // Cart ops
+      const addToCart = (product) => {
+        setCart(prev => ({ ...prev, [product.id]: (prev[product.id] || 0) + 1 }));
+      };
+      const increment = (id) => setCart(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      const decrement = (id) => {
+        setCart(prev => {
+          const qty = prev[id] || 0;
+          if (qty <= 1) {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          }
+          return { ...prev, [id]: qty - 1 };
+        });
+      };
+      const removeItem = (id) => {
+        setCart(prev => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      };
+
+      const { totalCount, itemTotal, savings } = useMemo(() => {
+        let count = 0, total = 0, save = 0;
+        Object.entries(cart).forEach(([id, qty]) => {
+          const prod = MOCK_PRODUCTS.find(p => p.id === id);
+          if (prod) {
+            count += qty;
+            total += qty * prod.sellingPrice;
+            if (prod.mrp > prod.sellingPrice) save += (prod.mrp - prod.sellingPrice) * qty;
+          }
+        });
+        return { totalCount: count, itemTotal: total, savings: save };
+      }, [cart]);
+
+      const isFreeDelivery = itemTotal >= MOCK_STORE.minFreeDelivery;
+      const deliveryFee = totalCount === 0 ? 0 : (isFreeDelivery ? 0 : MOCK_STORE.standardFee);
+      const grandTotal = itemTotal + deliveryFee;
+
+      // Reorder past order
+      const handleReorder = (items) => {
+        const newCart = {};
+        items.forEach(it => {
+          newCart[it.id] = it.qty;
+        });
+        setCart(newCart);
+        setScreen('CART');
+      };
+
+      const handlePlaceOrder = () => {
+        const ord = {
+          id: `#ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+          date: 'Just now',
+          total: grandTotal,
+          payment: 'UPI Online',
+          status: 'RECEIVED',
+          items: Object.entries(cart).map(([id, qty]) => {
+            const p = MOCK_PRODUCTS.find(item => item.id === id);
+            return { id, name: p.name, unit: p.unit, qty, price: p.sellingPrice };
+          })
+        };
+        setActiveOrder(ord);
+        setActiveStepIndex(0); // Start at received
+        setOrderHistory(prev => [ord, ...prev]);
+        setCart({});
+        setScreen('TRACKING');
+      };
+
+      // Helper ETA based on active step
+      const currentEta = useMemo(() => {
+        if (activeStepIndex === 0) return { time: '20 - 25 Mins', sub: 'Awaiting store confirmation' };
+        if (activeStepIndex === 1) return { time: '12 - 18 Mins', sub: 'Shopkeeper is packing your carry bag' };
+        if (activeStepIndex === 2) return { time: '5 - 8 Mins', sub: 'Rider is on the scooter nearby!' };
+        return { time: 'Delivered ✓', sub: 'Order completed at your doorstep' };
+      }, [activeStepIndex]);
+
+      return (
+        <div className="w-[390px] h-[844px] bg-slate-50 shadow-2xl rounded-[44px] overflow-hidden flex flex-col relative border-8 border-slate-800">
+          
+          {/* iOS Top Bar */}
+          <div className="bg-emerald-700 px-6 pt-3 pb-1 flex justify-between items-center text-white text-xs font-semibold select-none">
+            <span>9:41</span>
+            <div className="w-20 h-4 bg-slate-900 rounded-full mx-auto"></div>
+            <div className="flex gap-1.5 items-center">
+              <span>5G</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          {/* ================================================================= */}
+          {/* SCREEN: HOME */}
+          {/* ================================================================= */}
+          {screen === 'HOME' && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="bg-emerald-700 px-4 pb-4 pt-1 rounded-b-2xl shadow-md text-white">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h1 className="text-lg font-extrabold tracking-tight">{MOCK_STORE.name}</h1>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                      <span className="text-xs text-emerald-100 font-medium">Open • 15-25 min delivery</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setScreen('HISTORY')} 
+                    className="bg-emerald-800 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 text-white shadow-sm"
+                  >
+                    <span>📜 Orders</span>
+                  </button>
+                </div>
+
+                {/* Search Box */}
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-white rounded-xl px-3 py-2 flex items-center shadow-inner text-slate-800">
+                    <span className="mr-2 text-slate-400">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Search atta, dal, milk, biscuits..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full text-sm outline-none text-slate-800 placeholder-slate-400 font-medium"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Scrollable Products */}
+              <div className="flex-1 overflow-y-auto no-scrollbar pb-28 px-3 pt-3">
+                <div className="grid grid-cols-2 gap-2.5">
+                  {MOCK_PRODUCTS.map(product => {
+                    const qty = cart[product.id] || 0;
+                    return (
+                      <div key={product.id} className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div className="relative w-full h-24 bg-slate-100 rounded-xl overflow-hidden mb-2">
+                          <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                          {product.discountPercent > 0 && (
+                            <span className="absolute top-1 left-1 bg-red-600 text-white text-[9px] font-extrabold px-1 rounded">
+                              {product.discountPercent}% OFF
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold">{product.unit}</span>
+                          <h3 className="text-xs font-bold text-slate-900 line-clamp-1">{product.name}</h3>
+                          <span className="text-sm font-black text-slate-900 block mt-1">₹{product.sellingPrice}</span>
+                        </div>
+                        <div className="mt-2">
+                          {qty === 0 ? (
+                            <button
+                              onClick={() => addToCart(product)}
+                              className="w-full bg-orange-500 text-white text-xs font-bold py-1.5 rounded-xl shadow-sm hover:bg-orange-600 active:scale-95"
+                            >
+                              + ADD
+                            </button>
+                          ) : (
+                            <div className="flex items-center justify-between bg-emerald-800 text-white rounded-xl px-2 py-1">
+                              <button onClick={() => decrement(product.id)} className="w-6 h-6 flex items-center justify-center font-bold">−</button>
+                              <span className="text-xs font-bold">{qty}</span>
+                              <button onClick={() => increment(product.id)} className="w-6 h-6 flex items-center justify-center font-bold">+</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Cart Bar */}
+              {totalCount > 0 && (
+                <div className="absolute bottom-4 left-3 right-3 bg-emerald-700 text-white rounded-2xl p-3 shadow-2xl flex justify-between items-center z-20">
+                  <div>
+                    <span className="text-[10px] text-emerald-200 block">{totalCount} items</span>
+                    <span className="text-base font-black">₹{grandTotal}</span>
+                  </div>
+                  <button
+                    onClick={() => setScreen('CART')}
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow flex items-center gap-1 active:scale-95"
+                  >
+                    <span>View Cart</span>
+                    <span>→</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* SCREEN: CART */}
+          {/* ================================================================= */}
+          {screen === 'CART' && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+              <div className="bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm">
+                <button onClick={() => setScreen('HOME')} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold">←</button>
+                <h2 className="font-extrabold text-slate-900 text-base">Cart Review</h2>
+                <span className="text-xs text-slate-500">{totalCount} items</span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto no-scrollbar p-3.5 pb-28 space-y-3">
+                {Object.entries(cart).map(([id, qty]) => {
+                  const p = MOCK_PRODUCTS.find(item => item.id === id);
+                  if (!p) return null;
+                  return (
+                    <div key={id} className="bg-white rounded-2xl p-3 border border-slate-200 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <img src={p.image} className="w-12 h-12 rounded-xl object-cover" />
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{p.name}</h4>
+                          <span className="text-[11px] text-slate-500">₹{p.sellingPrice} • {p.unit}</span>
+                          <div className="text-xs font-extrabold text-emerald-800">₹{p.sellingPrice * qty}</div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center bg-slate-100 rounded-xl border">
+                          <button onClick={() => decrement(id)} className="w-7 h-7 flex items-center justify-center font-bold">−</button>
+                          <span className="px-2 text-xs font-bold">{qty}</span>
+                          <button onClick={() => increment(id)} className="w-7 h-7 flex items-center justify-center font-bold">+</button>
+                        </div>
+                        <button onClick={() => removeItem(id)} className="text-[10px] text-red-500 font-semibold">🗑️ Remove</button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2 text-xs">
+                  <h3 className="font-bold text-slate-900 text-sm border-b pb-2">Bill Breakdown</h3>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Item Total</span>
+                    <span className="font-bold">₹{itemTotal}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Delivery Fee</span>
+                    <span className="font-bold text-emerald-700">{isFreeDelivery ? 'FREE' : `₹${deliveryFee}`}</span>
+                  </div>
+                  <div className="border-t border-dashed pt-2 flex justify-between font-black text-sm text-slate-900">
+                    <span>Grand Total</span>
+                    <span className="text-emerald-700">₹{grandTotal}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute bottom-0 left-0 right-0 bg-white border-t p-3.5 flex justify-between items-center shadow-lg">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-medium">To Pay</span>
+                  <span className="text-xl font-extrabold text-slate-900">₹{grandTotal}</span>
+                </div>
+                <button
+                  onClick={handlePlaceOrder}
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm px-6 py-3 rounded-2xl shadow-md active:scale-95"
+                >
+                  Place Order & Pay →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* SCREEN: LIVE ORDER TRACKING */}
+          {/* ================================================================= */}
+          {screen === 'TRACKING' && activeOrder && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+              {/* Header */}
+              <div className="bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm">
+                <button onClick={() => setScreen('HOME')} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold">←</button>
+                <div className="text-center">
+                  <h2 className="font-extrabold text-slate-900 text-base">Live Order Tracking</h2>
+                  <span className="text-xs text-emerald-700 font-bold">{activeOrder.id}</span>
+                </div>
+                <button onClick={() => setScreen('HISTORY')} className="text-xs font-bold text-slate-600">📜 History</button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto no-scrollbar p-3.5 pb-24 space-y-4">
+                
+                {/* ETA Hero Card */}
+                <div className="bg-slate-900 text-white rounded-3xl p-5 text-center shadow-lg border border-slate-800">
+                  <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Estimated Time of Arrival</span>
+                  <h2 className="text-3xl font-black mt-1 mb-1 text-white">{currentEta.time}</h2>
+                  <p className="text-xs text-slate-300 mb-4">{currentEta.sub}</p>
+
+                  <div className="flex gap-2 justify-center">
+                    <button
+                      onClick={() => alert(`Calling shopkeeper at ${MOCK_STORE.phone}`)}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow"
+                    >
+                      <span>📞</span>
+                      <span>Call Store</span>
+                    </button>
+                    <button
+                      onClick={() => setShowReceiptModal(true)}
+                      className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2.5 rounded-xl border border-white/20 flex items-center justify-center gap-1.5"
+                    >
+                      <span>📄</span>
+                      <span>View Receipt</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4-Step Visual Timeline */}
+                <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-sm font-black text-slate-900">Order Status Timeline</h3>
+                    {/* Simulator buttons to test shopkeeper status progression */}
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setActiveStepIndex(Math.min(3, activeStepIndex + 1))}
+                        className="text-[10px] bg-slate-100 px-2 py-1 rounded font-bold hover:bg-slate-200"
+                        title="Simulate shopkeeper advancing the step"
+                      >
+                        Advance Step →
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 relative pl-2">
+                    {STEPS.map((step, idx) => {
+                      const isDone = idx < activeStepIndex;
+                      const isCurrent = idx === activeStepIndex;
+
+                      return (
+                        <div key={step.id} className="flex items-start gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 border-2 ${
+                            isDone ? 'bg-emerald-100 border-emerald-600 text-emerald-800' :
+                            isCurrent ? 'bg-orange-100 border-orange-500 text-orange-600 ring-4 ring-orange-100 animate-pulse' :
+                            'bg-slate-100 border-slate-300 text-slate-400'
+                          }`}>
+                            {isDone ? '✓' : step.icon}
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className={`text-xs font-bold ${isCurrent ? 'text-orange-600 font-extrabold' : isDone ? 'text-slate-900' : 'text-slate-400'}`}>
+                                {step.title}
+                              </h4>
+                              {isCurrent && (
+                                <span className="bg-orange-100 text-orange-700 text-[9px] font-black px-1.5 py-0.5 rounded">
+                                  IN PROGRESS
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-500">{step.desc}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Collapsible Accordion: Order Summary */}
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                  <div
+                    onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                    className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition"
+                  >
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900">Order Summary ({activeOrder.items.length} items)</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Total ₹{activeOrder.total} • {activeOrder.payment}</p>
+                    </div>
+                    <span className="text-xs font-bold text-emerald-700">{isAccordionOpen ? 'Hide ▲' : 'Details ▼'}</span>
+                  </div>
+
+                  {isAccordionOpen && (
+                    <div className="p-4 border-t border-slate-100 bg-slate-50 text-xs space-y-2">
+                      {activeOrder.items.map(it => (
+                        <div key={it.id} className="flex justify-between">
+                          <span>{it.name} ({it.unit}) x{it.qty}</span>
+                          <span className="font-bold">₹{it.price * it.qty}</span>
+                        </div>
+                      ))}
+                      <div className="border-t pt-2 flex justify-between font-black text-slate-900">
+                        <span>Total Paid</span>
+                        <span className="text-emerald-800">₹{activeOrder.total}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Bottom Sticky Action Bar */}
+              <div className="absolute bottom-0 left-0 right-0 bg-white border-t p-3.5 flex justify-between items-center shadow-lg">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-medium">Status</span>
+                  <span className="text-sm font-black text-slate-900">{STEPS[activeStepIndex].title}</span>
+                </div>
+                <button
+                  onClick={() => alert(`Calling shopkeeper at ${MOCK_STORE.phone}`)}
+                  className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow flex items-center gap-1.5 active:scale-95"
+                >
+                  <span>📞</span>
+                  <span>Call Store</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* SCREEN: ORDER HISTORY */}
+          {/* ================================================================= */}
+          {screen === 'HISTORY' && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+              <div className="bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm">
+                <button onClick={() => setScreen('HOME')} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold">←</button>
+                <div className="text-center">
+                  <h2 className="font-extrabold text-slate-900 text-base">Past Orders</h2>
+                  <span className="text-xs text-slate-500">Previous grocery purchases</span>
+                </div>
+                <div className="w-10"></div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto no-scrollbar p-3.5 space-y-4">
+                {orderHistory.map(ord => (
+                  <div key={ord.id} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="font-black text-sm text-slate-900">{ord.id}</span>
+                        <span className="text-[11px] text-slate-400 block">{ord.date}</span>
+                      </div>
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded">
+                        {ord.status} ✓
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-xl p-2.5 text-xs text-slate-700 space-y-1">
+                      {ord.items.map(it => (
+                        <div key={it.id} className="flex justify-between text-[11px]">
+                          <span className="truncate pr-2">{it.name} x{it.qty}</span>
+                          <span className="font-semibold">₹{it.price * it.qty}</span>
+                        </div>
+                      ))}
+                      <div className="border-t pt-1 flex justify-between font-extrabold text-slate-900">
+                        <span>Total Paid</span>
+                        <span className="text-emerald-800">₹{ord.total}</span>
+                      </div>
+                    </div>
+
+                    {/* One-Tap Reorder Button */}
+                    <button
+                      onClick={() => handleReorder(ord.items)}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs py-2.5 rounded-xl shadow flex items-center justify-center gap-1.5 active:scale-95 transition"
+                    >
+                      <span>🔄</span>
+                      <span>Reorder All Items</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* DIGITAL RECEIPT MODAL */}
+          {/* ================================================================= */}
+          {showReceiptModal && activeOrder && (
+            <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-5 z-50">
+              <div className="bg-white rounded-3xl p-5 w-full max-w-[320px] text-slate-800 shadow-2xl">
+                <div className="flex justify-between items-start border-b pb-2 mb-3">
+                  <div>
+                    <h3 className="font-black text-sm">{MOCK_STORE.name}</h3>
+                    <p className="text-[10px] text-slate-500">Official Delivery Receipt</p>
+                  </div>
+                  <button onClick={() => setShowReceiptModal(false)} className="text-slate-400 font-bold">✕</button>
+                </div>
+
+                <div className="text-[11px] space-y-1 mb-3">
+                  <div className="flex justify-between text-slate-500">
+                    <span>Order:</span>
+                    <span className="font-bold text-slate-800">{activeOrder.id}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500">
+                    <span>Payment:</span>
+                    <span className="font-bold text-slate-800">{activeOrder.payment}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-dashed py-2 text-xs space-y-1 max-h-36 overflow-y-auto">
+                  {activeOrder.items.map(it => (
+                    <div key={it.id} className="flex justify-between">
+                      <span className="truncate pr-2">{it.name} x{it.qty}</span>
+                      <span className="font-semibold">₹{it.price * it.qty}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-dashed pt-2 flex justify-between font-black text-sm text-slate-900 mb-4">
+                  <span>Grand Total</span>
+                  <span className="text-emerald-700">₹{activeOrder.total}</span>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowReceiptModal(false);
+                    alert("Receipt downloaded to phone!");
+                  }}
+                  className="w-full bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl shadow"
+                >
+                  Download / Save Receipt
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Device bar */}
+          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-slate-300 rounded-full pointer-events-none"></div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
