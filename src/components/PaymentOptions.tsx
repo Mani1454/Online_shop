@@ -25,8 +25,8 @@ export const PaymentOptions: React.FC<PaymentOptionsProps> = ({
   selectedMethod,
   onSelectMethod,
   totalAmount,
-  shopName = 'Apna Kirana Store',
-  shopkeeperVpa = 'apnakirana@okaxis',
+  shopName = 'Apna Kirana & Daily Needs',
+  shopkeeperVpa = '8873679268@apl',
   isAddressSelected,
   minOrderValue = 50,
 }) => {

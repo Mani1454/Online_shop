@@ -24,9 +24,9 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   storeName,
   isStoreOpen,
-  deliveryTimeEstimate = '15-25 mins',
+  deliveryTimeEstimate = '~1 hr',
   currentAddressLabel = 'Home',
-  currentAddressSnippet = 'Pocket 2, Near Community Park',
+  currentAddressSnippet = 'Sitamarhi, Bihar',
   searchQuery,
   onSearchChange,
   onAddressPress,

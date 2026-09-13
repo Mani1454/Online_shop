@@ -27,7 +27,7 @@ interface OrderTrackingScreenProps {
 export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({
   order: initialOrder,
   liveOrdersList,
-  shopPhone = '+919876543210',
+  shopPhone = '+918873679268',
   onBackToHome,
   onViewOrderHistory,
 }) => {

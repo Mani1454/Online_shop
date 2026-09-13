@@ -14,9 +14,9 @@ export const SettingsScreen: React.FC = () => {
   const [isStoreOpen, setIsStoreOpen] = useState(true);
   const [minFreeDelivery, setMinFreeDelivery] = useState('150');
   const [standardDeliveryFee, setStandardDeliveryFee] = useState('20');
-  const [deliveryRadius, setDeliveryRadius] = useState('3.5');
-  const [upiVpa, setUpiVpa] = useState('apnakirana@okaxis');
-  const [storePhone, setStorePhone] = useState('+919876543210');
+  const [deliveryRadius, setDeliveryRadius] = useState('3');
+  const [upiVpa, setUpiVpa] = useState('8873679268@apl');
+  const [storePhone, setStorePhone] = useState('+918873679268');
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSaveSettings = () => {
@@ -155,7 +155,7 @@ export const SettingsScreen: React.FC = () => {
               style={styles.textInput}
               value={upiVpa}
               onChangeText={setUpiVpa}
-              placeholder="e.g. apnakirana@okaxis"
+              placeholder="e.g. 8873679268@apl"
             />
             <Text style={styles.fieldHint}>
               Used for generating upi://pay deep links for GPay, PhonePe, Paytm.
@@ -170,7 +170,7 @@ export const SettingsScreen: React.FC = () => {
               keyboardType="phone-pad"
               value={storePhone}
               onChangeText={setStorePhone}
-              placeholder="+919876543210"
+              placeholder="+918873679268"
             />
             <Text style={styles.fieldHint}>
               Shown to customers on the "Call Store" button.

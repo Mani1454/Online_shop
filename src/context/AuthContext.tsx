@@ -81,12 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (userSnap.exists()) {
           return userSnap.data() as UserProfile;
         } else {
-          // Determine if test phone number should be granted admin role automatically
-          const isAdminNumber = phoneNumber.includes('9876543210');
+          // Determine if store owner phone number should be granted admin role automatically
+          const isAdminNumber = phoneNumber.includes('8873679268') || phoneNumber.includes('9876543210');
           const defaultProfile: UserProfile = {
             uid,
             phone_number: phoneNumber,
-            name: isAdminNumber ? 'Shopkeeper (Counter)' : 'Neighborhood Customer',
+            name: isAdminNumber ? 'Shopkeeper (Apna Kirana)' : 'Neighborhood Customer',
             role: isAdminNumber ? 'admin' : 'customer',
             saved_addresses: [
               {
@@ -111,11 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // 2. Local fallback profile
-    const isAdminNumber = phoneNumber.includes('9876543210');
+    const isAdminNumber = phoneNumber.includes('8873679268') || phoneNumber.includes('9876543210');
     return {
       uid,
       phone_number: phoneNumber,
-      name: isAdminNumber ? 'Shopkeeper (Counter)' : 'Neighborhood Customer',
+      name: isAdminNumber ? 'Shopkeeper (Apna Kirana)' : 'Neighborhood Customer',
       role: isAdminNumber ? 'admin' : 'customer',
       saved_addresses: [
         {
@@ -267,7 +267,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Fallback demo check
         if (otpCode === '123456' || otpCode.length === 6) {
-          const mockUid = pendingPhone.includes('9876543210') ? 'admin_shop_01' : `cust_${Date.now()}`;
+          const isAdm = pendingPhone.includes('8873679268') || pendingPhone.includes('9876543210');
+          const mockUid = isAdm ? 'admin_shop_01' : `cust_${Date.now()}`;
           const profile = await syncOrCreateUserProfile(mockUid, pendingPhone || '+919811223344');
           setUserProfile(profile);
           if (typeof window !== 'undefined' && window.localStorage) {

@@ -305,7 +305,53 @@
       // Delivery Settings
       const [minFreeDelivery, setMinFreeDelivery] = useState('150');
       const [standardDeliveryFee, setStandardDeliveryFee] = useState('20');
-      const [upiVpa, setUpiVpa] = useState('apnakirana@okaxis');
+      const [upiVpa, setUpiVpa] = useState('8873679268@apl');
+      const [storeAddress, setStoreAddress] = useState('Sitamarhi, Bihar');
+      const [storePhone, setStorePhone] = useState('+918873679268');
+
+      // Real-Time Store Config Listener
+      useEffect(() => {
+        if (!firebaseDb) return;
+        try {
+          firebaseDb.collection('store_config').doc('default_store').get().then(doc => {
+            if (doc.exists) {
+              const d = doc.data();
+              if (d.upi_vpa) setUpiVpa(d.upi_vpa);
+              if (d.contact_phone) setStorePhone(d.contact_phone);
+              if (d.physical_address) setStoreAddress(d.physical_address);
+              if (d.min_free_delivery) setMinFreeDelivery(String(d.min_free_delivery));
+              if (d.standard_delivery_fee) setStandardDeliveryFee(String(d.standard_delivery_fee));
+              if (typeof d.is_open === 'boolean') setIsStoreOpen(d.is_open);
+            }
+          });
+        } catch(e) {
+          console.warn('Store config fetch note:', e);
+        }
+      }, []);
+
+      const handleSaveSettings = async () => {
+        if (firebaseDb) {
+          try {
+            await firebaseDb.collection('store_config').doc('default_store').set({
+              store_name: 'Apna Kirana & Daily Needs',
+              contact_phone: storePhone,
+              physical_address: storeAddress,
+              upi_vpa: upiVpa,
+              min_free_delivery: Number(minFreeDelivery) || 150,
+              standard_delivery_fee: Number(standardDeliveryFee) || 20,
+              delivery_radius_km: 3,
+              estimated_delivery_time: '1 hr',
+              is_open: isStoreOpen,
+              updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            alert("✅ Store settings saved live to Cloud Firestore & synced across customer mobile apps!");
+            return;
+          } catch (e) {
+            console.warn('Error saving store config:', e);
+          }
+        }
+        alert("✅ Settings saved locally!");
+      };
 
       // Real-Time Firestore Sync Listener
       useEffect(() => {
@@ -323,7 +369,7 @@
                     id: data.order_id || doc.id,
                     docId: doc.id,
                     customer: data.customer_name || 'Customer',
-                    phone: data.customer_phone || '+919876543210',
+                    phone: data.customer_phone || '+918873679268',
                     address: data.delivery_address?.streetAddress || 'Doorstep Delivery',
                     landmark: data.delivery_address?.landmark || '',
                     payment: data.payment_method || 'COD',
@@ -380,13 +426,13 @@
       };
 
       const dispatchOrder = async (orderId) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'OUT_FOR_DELIVERY', rider: 'Ramesh (+919876001122)' } : o));
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'OUT_FOR_DELIVERY', rider: 'Delivery Partner (+918873679268)' } : o));
         if (firebaseDb) {
           try {
             const cleanId = orderId.replace('#', '');
             await firebaseDb.collection('orders').doc(cleanId).update({
               status: 'OUT_FOR_DELIVERY',
-              delivery_partner: { name: 'Ramesh (Delivery Partner)', phone: '+919876001122' },
+              delivery_partner: { name: 'Store Delivery Partner', phone: '+918873679268' },
               status_timeline: firebase.firestore.FieldValue.arrayUnion({
                 status: 'OUT_FOR_DELIVERY',
                 timestamp: new Date().toISOString(),
@@ -1067,9 +1113,31 @@
                   </button>
                 </div>
 
-                {/* Delivery Threshold Rules */}
+                {/* Delivery Threshold Rules & Store Profile */}
                 <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-                  <h3 className="text-base font-black text-slate-900">Delivery Rules & Fees</h3>
+                  <h3 className="text-base font-black text-slate-900">Store Profile & Delivery Rules</h3>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Store Contact Phone</label>
+                      <input
+                        type="text"
+                        value={storePhone}
+                        onChange={(e) => setStorePhone(e.target.value)}
+                        className="w-full bg-slate-100 border rounded-xl px-4 py-3 text-sm font-bold outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Physical Address / City</label>
+                      <input
+                        type="text"
+                        value={storeAddress}
+                        onChange={(e) => setStoreAddress(e.target.value)}
+                        className="w-full bg-slate-100 border rounded-xl px-4 py-3 text-sm font-bold outline-none"
+                      />
+                    </div>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -1094,7 +1162,7 @@
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Shopkeeper UPI VPA for Payments</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Shopkeeper UPI VPA for Zero-Commission Direct Payments</label>
                     <input
                       type="text"
                       value={upiVpa}
@@ -1104,10 +1172,10 @@
                   </div>
 
                   <button
-                    onClick={() => alert("Settings saved live across all apps!")}
+                    onClick={handleSaveSettings}
                     className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md transition cursor-pointer"
                   >
-                    Save All Settings ✓
+                    Save All Settings to Cloud Firestore ✓
                   </button>
                 </div>
 

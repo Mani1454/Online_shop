@@ -77,18 +77,18 @@ export function useLiveOrder(
     switch (order.status) {
       case 'RECEIVED':
         return {
-          etaText: '20 - 25 Mins',
+          etaText: 'Within 1 Hour',
           etaSubtext: 'Awaiting shopkeeper packing confirmation',
         };
       case 'PREPARING':
         return {
-          etaText: '12 - 18 Mins',
+          etaText: '35 - 45 Mins',
           etaSubtext: 'Shopkeeper is packing your carry bag right now',
         };
       case 'OUT_FOR_DELIVERY':
         return {
-          etaText: '5 - 8 Mins',
-          etaSubtext: 'Rider is on the scooter heading to your address!',
+          etaText: '15 - 20 Mins',
+          etaSubtext: 'Rider is on the way heading to your address!',
         };
       case 'DELIVERED':
         return {

@@ -54,8 +54,8 @@ interface CheckoutScreenProps {
 
 export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
   cart,
-  shopName = 'Apna Kirana Store',
-  shopkeeperVpa = 'apnakirana@okaxis',
+  shopName = 'Apna Kirana & Daily Needs',
+  shopkeeperVpa = '8873679268@apl',
   freeDeliveryThreshold = 150,
   standardDeliveryFee = 20,
   onBackToCart,
@@ -116,8 +116,8 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
     const newOrder: Order = {
       id: friendlyOrderId,
       customerId: 'user_1',
-      customerName: 'Rohit Kumar',
-      customerPhone: '+919876543210',
+      customerName: 'Customer',
+      customerPhone: '+918873679268',
       deliveryAddress: selectedAddress,
       items: cartList.map(({ product, quantity }) => ({
         id: `item_${product.id}_${Date.now()}`,
@@ -175,7 +175,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
         <View style={styles.headerTitleGroup}>
           <Text style={styles.headerTitle}>Checkout & Payment</Text>
           <Text style={styles.headerSubtitle}>
-            Delivery in 15-25 mins to your doorstep
+            Delivery in ~1 hr to your doorstep
           </Text>
         </View>
       </View>
@@ -307,7 +307,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Estimated Delivery:</Text>
-                  <Text style={styles.detailValue}>15 - 25 Minutes</Text>
+                  <Text style={styles.detailValue}>Within 1 Hour</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Payment Method:</Text>

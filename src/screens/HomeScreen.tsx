@@ -26,10 +26,10 @@ const MOCK_STORE: StoreConfig = {
   isStoreOpen: true,
   minOrderFreeDelivery: 150,
   standardDeliveryFee: 20,
-  deliveryRadiusKm: 3.5,
-  storeCoordinates: { latitude: 28.6139, longitude: 77.209 },
-  upiVpa: 'apnakirana@okaxis',
-  contactPhone: '+919876543210',
+  deliveryRadiusKm: 3,
+  storeCoordinates: { latitude: 26.5975, longitude: 85.4897 },
+  upiVpa: '8873679268@apl',
+  contactPhone: '+918873679268',
 };
 
 const MOCK_CATEGORIES: Category[] = [
