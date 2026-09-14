@@ -4,3 +4,7 @@ dist/
 web-build/
 .vercel
 *.log
+
+serviceAccountKey.json
+*.pem
+*.key
