@@ -227,34 +227,6 @@ function AppContent() {
     return <LoginScreen onSuccess={() => setCurrentScreen('HOME')} />;
   }
 
-  // If user is Admin and Admin view is selected
-  if (role === 'admin' && currentScreen === 'ADMIN') {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#0F172A' }}>
-        <View style={appStyles.authBar}>
-          <Text style={appStyles.authBarText}>
-            {`💼 ${userProfile?.name || 'Shopkeeper'} (${userProfile?.phone_number || ''})`}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity
-              onPress={() => setCurrentScreen('HOME')}
-              style={appStyles.authBarButton}
-            >
-              <Text style={appStyles.authBarButtonText}>📱 Customer View</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => signOut()}
-              style={[appStyles.authBarButton, { backgroundColor: '#451A1A' }]}
-            >
-              <Text style={[appStyles.authBarButtonText, { color: '#FCA5A5' }]}>Logout</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <AdminPortal />
-      </View>
-    );
-  }
-
   // Cart manipulation handlers
   const handleAddToCart = (product: Product) => {
     crashlyticsService.trackCartItemModified(product.id, product.name, 'ADD', 1);
@@ -493,14 +465,6 @@ function AppContent() {
           {`👤 ${userProfile?.name || 'Customer'} (${userProfile?.phone_number || ''})`}
         </Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          {role === 'admin' && (
-            <TouchableOpacity
-              onPress={() => setCurrentScreen('ADMIN')}
-              style={[appStyles.authBarButton, { backgroundColor: '#064E3B' }]}
-            >
-              <Text style={[appStyles.authBarButtonText, { color: '#A7F3D0' }]}>💻 Counter Tablet</Text>
-            </TouchableOpacity>
-          )}
           <TouchableOpacity
             onPress={() => signOut()}
             style={[appStyles.authBarButton, { backgroundColor: '#334155' }]}

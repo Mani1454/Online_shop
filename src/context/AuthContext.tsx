@@ -7,12 +7,8 @@ import {
   ConfirmationResult,
   User as FirebaseUser,
 } from 'firebase/auth';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Alert } from 'react-native';
 import { auth, db, isFirebaseConfigured } from '../services/firebaseConfig';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
@@ -190,6 +186,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await response.json();
       if (response.ok && data.success) {
         console.log('✅ OTP dispatched successfully:', data.message);
+        Alert.alert(
+          'Verification Code',
+          `Your 6-digit verification code is: ${data.devOtp || '123456'}\n\n(Client demo code 123456 also accepted)`
+        );
         setLoading(false);
         return true;
       } else if (!response.ok && data.error) {
@@ -221,6 +221,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Mobile / Standalone APK verification session handler
     await new Promise((res) => setTimeout(res, 500));
+
+    Alert.alert(
+      'Verification Code',
+      'Your 6-digit verification code is: 123456\n\n(Client demo code 123456 accepted)'
+    );
 
     setConfirmationResult({
       confirm: async (otp: string) => {

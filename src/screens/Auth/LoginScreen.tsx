@@ -198,53 +198,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
           <Text style={styles.title}>Apna Kirana</Text>
           <Text style={styles.subtitle}>
             {step === 'PHONE_ENTRY'
-              ? (loginMode === 'CUSTOMER'
-                  ? 'Enter your mobile number for fast neighborhood grocery deliveries'
-                  : 'Counter administration login with registered phone & security PIN')
+              ? 'Enter your mobile number for fast neighborhood grocery deliveries'
               : `Enter the 6-digit code sent to +91 ${phoneNumber}`}
           </Text>
         </View>
 
-        {/* Role Selection Tabs (Only on Phone Entry) */}
-        {step === 'PHONE_ENTRY' && (
-          <View style={styles.roleTabsContainer}>
-            <TouchableOpacity
-              style={[styles.roleTab, loginMode === 'CUSTOMER' && styles.roleTabActive]}
-              onPress={() => {
-                setLoginMode('CUSTOMER');
-                clearError();
-                setPhoneError(null);
-                setShopkeeperError(null);
-              }}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.roleTabText, loginMode === 'CUSTOMER' && styles.roleTabTextActive]}>
-                👤 Customer (ग्राहक)
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.roleTab, loginMode === 'SHOPKEEPER' && styles.roleTabActive]}
-              onPress={() => {
-                setLoginMode('SHOPKEEPER');
-                clearError();
-                setPhoneError(null);
-                setShopkeeperError(null);
-              }}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.roleTabText, loginMode === 'SHOPKEEPER' && styles.roleTabTextActive]}>
-                💼 Shopkeeper (दुकानदार)
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* Global Error Banner */}
-        {(error || phoneError || shopkeeperError) && (
+        {(error || phoneError) && (
           <View style={styles.errorBanner}>
             <Text style={styles.errorIcon}>⚠️</Text>
-            <Text style={styles.errorText}>{error || phoneError || shopkeeperError}</Text>
+            <Text style={styles.errorText}>{error || phoneError}</Text>
           </View>
         )}
 
@@ -396,12 +359,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Demo OTP Helper Banner */}
-            <View style={{ backgroundColor: '#ECFDF5', padding: 10, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: '#A7F3D0' }}>
-              <Text style={{ fontSize: 12, color: '#065F46', textAlign: 'center', fontWeight: 'bold' }}>
-                💡 Demo Mode: Enter code 123456 to verify
+            {/* Demo OTP Helper Banner with 1-Tap Fill */}
+            <TouchableOpacity
+              onPress={() => {
+                setOtpDigits(['1', '2', '3', '4', '5', '6']);
+                triggerVerify('123456');
+              }}
+              style={{
+                backgroundColor: '#ECFDF5',
+                padding: 12,
+                borderRadius: 12,
+                marginBottom: 16,
+                borderWidth: 1.5,
+                borderColor: '#6EE7B7',
+                alignItems: 'center',
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontSize: 13, color: '#065F46', textAlign: 'center', fontWeight: 'bold' }}>
+                💡 Verification Code: 123456
               </Text>
-            </View>
+              <Text style={{ fontSize: 11, color: '#047857', marginTop: 3, fontWeight: '600' }}>
+                ⚡ Tap here to auto-fill 123456 & Proceed
+              </Text>
+            </TouchableOpacity>
 
             {/* 6 Auto-Advancing OTP Boxes */}
             <View style={styles.otpBoxesContainer}>

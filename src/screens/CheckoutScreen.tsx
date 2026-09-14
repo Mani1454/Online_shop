@@ -10,6 +10,7 @@ import {
   Modal,
   Platform,
   Alert,
+  Linking,
 } from 'react-native';
 import { AddressSelector } from '../components/AddressSelector';
 import { PaymentOptions } from '../components/PaymentOptions';
@@ -117,23 +118,8 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
     setSelectedAddress(newAddress);
   };
 
-  const handlePlaceOrder = () => {
-    if (!selectedAddress) {
-      Alert.alert('Missing Address', 'Please select or add a delivery address.');
-      return;
-    }
-
-    if (itemTotal === 0) {
-      Alert.alert('Cart is empty', 'Add items before checking out.');
-      return;
-    }
-
+  const submitOrderRecord = (friendlyOrderId: string, custUid: string, custName: string, custPhone: string) => {
     setIsSubmitting(true);
-
-    const friendlyOrderId = `#ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const custPhone = userProfile?.phone_number || '+918873679268';
-    const custName = userProfile?.name || 'Neighborhood Customer';
-    const custUid = userProfile?.uid || `cust_${custPhone.replace(/\D/g, '').slice(-10) || Date.now()}`;
     const cleanUtr = transactionRef.trim();
 
     const newOrder: Order = {
@@ -141,7 +127,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
       customerId: custUid,
       customerName: custName,
       customerPhone: custPhone,
-      deliveryAddress: selectedAddress,
+      deliveryAddress: selectedAddress!,
       items: cartList.map(({ product, quantity }) => ({
         id: `item_${product.id}_${Date.now()}`,
         productId: product.id,
@@ -179,6 +165,69 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
       setShowSuccessModal(true);
       onOrderPlaced(newOrder);
     }, 600);
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
+      Alert.alert('Missing Address', 'Please select or add a delivery address.');
+      return;
+    }
+
+    if (itemTotal === 0) {
+      Alert.alert('Cart is empty', 'Add items before checking out.');
+      return;
+    }
+
+    const friendlyOrderId = `#ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const custPhone = userProfile?.phone_number || '+918873679268';
+    const custName = userProfile?.name || 'Neighborhood Customer';
+    const custUid = userProfile?.uid || `cust_${custPhone.replace(/\D/g, '').slice(-10) || Date.now()}`;
+
+    // If UPI chosen and user hasn't entered a confirmed UTR yet, launch the UPI app directly
+    if (paymentMethod === 'UPI') {
+      const formattedAmount = grandTotal.toFixed(2);
+      const note = encodeURIComponent(`Order_${friendlyOrderId}`);
+      const payeeName = encodeURIComponent(shopName);
+      const upiUrl = `upi://pay?pa=${shopkeeperVpa}&pn=${payeeName}&am=${formattedAmount}&cu=INR&tn=${note}`;
+
+      try {
+        const canOpen = await Linking.canOpenURL(upiUrl);
+        if (canOpen) {
+          await Linking.openURL(upiUrl);
+          Alert.alert(
+            'UPI App Launched ⚡',
+            `Complete payment of ₹${formattedAmount} in your UPI app.\n\nAfter paying, enter your 12-digit Bank UTR or tap "Confirm Order" to place your order.`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Confirm Order ✓',
+                onPress: () => submitOrderRecord(friendlyOrderId, custUid, custName, custPhone),
+              },
+            ]
+          );
+          return;
+        } else {
+          // No UPI app on device/simulator
+          Alert.alert(
+            'Pay via UPI',
+            `Shop UPI VPA: ${shopkeeperVpa}\nAmount: ₹${formattedAmount}\n\nPlease scan the BharatQR code or pay using your UPI app and tap Confirm.`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Confirm Order ✓',
+                onPress: () => submitOrderRecord(friendlyOrderId, custUid, custName, custPhone),
+              },
+            ]
+          );
+          return;
+        }
+      } catch (err) {
+        console.warn('UPI intent launch note:', err);
+      }
+    }
+
+    // Direct submission for COD
+    submitOrderRecord(friendlyOrderId, custUid, custName, custPhone);
   };
 
   return (
