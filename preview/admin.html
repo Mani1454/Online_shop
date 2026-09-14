@@ -731,19 +731,21 @@
         <div className="flex-1 flex flex-col bg-slate-100 text-slate-800">
           
           {/* Header Bar */}
-          <header className="bg-slate-900 text-white px-8 py-3.5 flex flex-wrap justify-between items-center border-b border-slate-800 shadow-lg">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🏪</span>
-              <div>
-                <h1 className="text-xl font-black tracking-tight">Apna Kirana & Daily Needs</h1>
-                <p className="text-xs text-slate-400">Shopkeeper Tablet & Kiosk Portal</p>
+          <header className="bg-slate-900 text-white px-4 sm:px-8 py-3.5 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 border-b border-slate-800 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🏪</span>
+                <div>
+                  <h1 className="text-lg sm:text-xl font-black tracking-tight">Apna Kirana & Daily Needs</h1>
+                  <p className="text-xs text-slate-400">Shopkeeper Tablet & Kiosk Portal</p>
+                </div>
               </div>
             </div>
 
             {/* Master Store Status Switch */}
             <button
               onClick={() => setIsStoreOpen(!isStoreOpen)}
-              className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border-2 transition active:scale-95 shadow ${
+              className={`flex items-center justify-between sm:justify-start gap-3 px-4 sm:px-5 py-2.5 rounded-2xl border-2 transition active:scale-95 shadow ${
                 isStoreOpen ? 'bg-emerald-950 border-emerald-500 text-emerald-100' : 'bg-red-950 border-red-500 text-red-100'
               }`}
             >
@@ -759,10 +761,10 @@
             </button>
 
             {/* Navigation Tabs */}
-            <div className="flex bg-slate-800 p-1.5 rounded-2xl gap-1">
+            <div className="flex bg-slate-800 p-1.5 rounded-2xl gap-1 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setTab('ORDERS')}
-                className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold transition ${
+                className={`flex items-center gap-2 px-3 sm:px-5 py-2 rounded-xl text-xs font-extrabold transition whitespace-nowrap ${
                   tab === 'ORDERS' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -776,7 +778,7 @@
 
               <button
                 onClick={() => setTab('INVENTORY')}
-                className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold transition ${
+                className={`flex items-center gap-2 px-3 sm:px-5 py-2 rounded-xl text-xs font-extrabold transition whitespace-nowrap ${
                   tab === 'INVENTORY' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -788,7 +790,7 @@
 
               <button
                 onClick={() => setTab('SETTINGS')}
-                className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold transition ${
+                className={`flex items-center gap-2 px-3 sm:px-5 py-2 rounded-xl text-xs font-extrabold transition whitespace-nowrap ${
                   tab === 'SETTINGS' ? 'bg-emerald-700 text-white shadow' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -800,19 +802,19 @@
                   setShowAddModal(true);
                   setTab('INVENTORY');
                 }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-md border border-emerald-400/30 transition active:scale-95 cursor-pointer ml-2"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-md border border-emerald-400/30 transition active:scale-95 cursor-pointer ml-1 whitespace-nowrap"
               >
                 <span className="text-sm">➕</span>
-                <span>Add Product (नया सामान)</span>
+                <span>Add Product</span>
               </button>
             </div>
           </header>
 
           {/* Audio Chime Notification Banner */}
           {isRinging && (
-            <div className="bg-red-600 text-white px-8 py-3 flex justify-between items-center shadow-xl animate-pulse">
+            <div className="bg-red-600 text-white px-4 sm:px-8 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-xl animate-pulse">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">🔔</span>
+                <span className="text-2xl sm:text-3xl">🔔</span>
                 <div>
                   <h3 className="text-sm font-black tracking-wide">INCOMING ORDER ALERT! ({newOrdersList.length} Waiting)</h3>
                   <p className="text-xs text-red-100">Chime is ringing on the counter... Tap "Accept & Start Packing" to silence.</p>
@@ -820,7 +822,7 @@
               </div>
               <button
                 onClick={toggleMute}
-                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-xl border border-white"
+                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-xl border border-white whitespace-nowrap"
               >
                 {isMuted ? '🔇 Unmute' : '🔕 Silence Bell'}
               </button>
@@ -831,9 +833,9 @@
           {/* TAB 1: KANBAN LIVE ORDERS BOARD */}
           {/* ================================================================= */}
           {tab === 'ORDERS' && (
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-y-auto lg:overflow-hidden min-h-0">
               {/* Toolbar */}
-              <div className="bg-white px-8 py-3 border-b border-slate-200 flex justify-between items-center gap-4">
+              <div className="bg-white px-4 sm:px-8 py-3 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 shrink-0">
                 <div className="flex items-center gap-3 flex-1 max-w-md">
                   <span className="text-slate-400">🔍</span>
                   <input
@@ -845,18 +847,18 @@
                   />
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 justify-end flex-wrap">
                   <button
                     onClick={simulateIncoming}
-                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow flex items-center gap-1.5 active:scale-95 transition"
+                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow flex items-center gap-1.5 active:scale-95 transition whitespace-nowrap"
                   >
                     <span>⚡</span>
-                    <span>Simulate Incoming Order</span>
+                    <span>Simulate Order</span>
                   </button>
 
                   <button
                     onClick={toggleMute}
-                    className={`text-xs font-bold px-4 py-2.5 rounded-xl border ${isMuted ? 'bg-red-50 text-red-700 border-red-300' : 'bg-slate-100 text-slate-700 border-slate-300'}`}
+                    className={`text-xs font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border whitespace-nowrap ${isMuted ? 'bg-red-50 text-red-700 border-red-300' : 'bg-slate-100 text-slate-700 border-slate-300'}`}
                   >
                     {isMuted ? '🔇 Muted' : '🔊 Chimes Active'}
                   </button>
@@ -864,10 +866,10 @@
               </div>
 
               {/* 3-Column Kanban Board */}
-              <div className="flex-1 p-6 grid grid-cols-3 gap-6 overflow-hidden">
+              <div className="flex-1 p-3 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 overflow-y-auto md:overflow-hidden min-h-0">
                 
                 {/* Column 1: New Orders */}
-                <div className="bg-red-50/60 border-2 border-red-200 rounded-3xl p-4 flex flex-col overflow-hidden shadow-sm">
+                <div className="bg-red-50/60 border-2 border-red-200 rounded-3xl p-3 sm:p-4 flex flex-col min-h-[300px] md:min-h-0 overflow-hidden shadow-sm">
                   <div className="flex justify-between items-center pb-3 border-b border-red-200 mb-3">
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-red-600 animate-ping"></span>
@@ -987,7 +989,7 @@
                 </div>
 
                 {/* Column 2: Packing / Preparing */}
-                <div className="bg-amber-50/60 border-2 border-amber-200 rounded-3xl p-4 flex flex-col overflow-hidden shadow-sm">
+                <div className="bg-amber-50/60 border-2 border-amber-200 rounded-3xl p-3 sm:p-4 flex flex-col min-h-[300px] md:min-h-0 overflow-hidden shadow-sm">
                   <div className="flex justify-between items-center pb-3 border-b border-amber-200 mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-base">🛍️</span>
@@ -1065,7 +1067,7 @@
                 </div>
 
                 {/* Column 3: Out for Delivery */}
-                <div className="bg-blue-50/60 border-2 border-blue-200 rounded-3xl p-4 flex flex-col overflow-hidden shadow-sm">
+                <div className="bg-blue-50/60 border-2 border-blue-200 rounded-3xl p-3 sm:p-4 flex flex-col min-h-[300px] md:min-h-0 overflow-hidden shadow-sm">
                   <div className="flex justify-between items-center pb-3 border-b border-blue-200 mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-base">🛵</span>
@@ -1120,34 +1122,34 @@
           {/* TAB 2: INVENTORY & 1-TAP STOCK TOGGLE */}
           {/* ================================================================= */}
           {tab === 'INVENTORY' && (
-            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50 p-8">
-              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex-1 flex flex-col overflow-hidden">
-                <div className="flex justify-between items-center mb-6 pb-4 border-b">
+            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50 p-3 sm:p-6 lg:p-8">
+              <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm flex-1 flex flex-col overflow-hidden">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6 pb-4 border-b">
                   <div>
-                    <h2 className="text-xl font-black text-slate-900">Inventory & Stock Management</h2>
+                    <h2 className="text-lg sm:text-xl font-black text-slate-900">Inventory & Stock Management</h2>
                     <p className="text-xs text-slate-500">One-tap toggle disables items immediately on customer phones</p>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                     <input
                       type="text"
                       placeholder="Search product..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold outline-none w-64"
+                      className="bg-slate-100 border border-slate-300 rounded-xl px-4 py-2 text-xs font-semibold outline-none w-full sm:w-64"
                     />
                     <button
                       onClick={() => setShowAddModal(true)}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow transition active:scale-95 cursor-pointer"
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow transition active:scale-95 cursor-pointer whitespace-nowrap"
                     >
                       <span className="text-sm">➕</span>
-                      <span>Add Product (नया सामान जोड़ें)</span>
+                      <span>Add Product</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto">
-                  <table className="w-full text-left text-xs">
+                <div className="flex-1 overflow-x-auto overflow-y-auto">
+                  <table className="w-full min-w-[560px] text-left text-xs">
                     <thead>
                       <tr className="border-b text-slate-400 uppercase text-[10px] font-bold">
                         <th className="pb-3 pl-2">Product Name</th>
@@ -1210,35 +1212,35 @@
           {/* TAB 3: STORE CONTROL PANEL / SETTINGS */}
           {/* ================================================================= */}
           {tab === 'SETTINGS' && (
-            <div className="flex-1 flex flex-col overflow-y-auto bg-slate-50 p-8">
+            <div className="flex-1 flex flex-col overflow-y-auto bg-slate-50 p-3 sm:p-6 lg:p-8">
               <div className="max-w-3xl mx-auto w-full space-y-6">
                 
                 {/* Giant Master Store Switch */}
-                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm">
                   <h3 className="text-base font-black text-slate-900 mb-1">Master Store Switch</h3>
                   <p className="text-xs text-slate-500 mb-4">When closed, customer mobile app disables cart checkout</p>
 
                   <button
                     onClick={() => setIsStoreOpen(!isStoreOpen)}
-                    className={`w-full p-6 rounded-2xl border-2 flex items-center gap-5 transition shadow-lg ${
+                    className={`w-full p-4 sm:p-6 rounded-2xl border-2 flex items-center gap-3 sm:gap-5 transition shadow-lg ${
                       isStoreOpen ? 'bg-emerald-950 border-emerald-500 text-emerald-100' : 'bg-red-950 border-red-500 text-red-100'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base font-black ${isStoreOpen ? 'bg-emerald-400 text-slate-900' : 'bg-red-500 text-white'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base font-black shrink-0 ${isStoreOpen ? 'bg-emerald-400 text-slate-900' : 'bg-red-500 text-white'}`}>
                       {isStoreOpen ? '✓' : '✕'}
                     </div>
                     <div className="text-left">
-                      <h4 className="text-base font-black">{isStoreOpen ? 'STORE OPEN (Accepting Orders)' : 'STORE CLOSED (Orders Paused)'}</h4>
+                      <h4 className="text-sm sm:text-base font-black">{isStoreOpen ? 'STORE OPEN (Accepting Orders)' : 'STORE CLOSED (Orders Paused)'}</h4>
                       <p className="text-xs opacity-80 mt-1">{isStoreOpen ? 'Neighborhood customers can place delivery orders.' : 'Checkouts blocked across all mobile customer apps.'}</p>
                     </div>
                   </button>
                 </div>
 
                 {/* Delivery Threshold Rules & Store Profile */}
-                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4">
                   <h3 className="text-base font-black text-slate-900">Store Profile & Delivery Rules</h3>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Store Contact Phone</label>
                       <input
@@ -1260,7 +1262,7 @@
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Min Order for Free Delivery (₹)</label>
                       <input
