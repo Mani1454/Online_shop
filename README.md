@@ -1,142 +1,98 @@
-﻿<div align="center">
+﻿# 🛒 Hyperlocal Commerce & Store Management Engine
+### Built by Manish Kumar ([@Mani1454](https://github.com/Mani1454))
 
-# 🛒 Hyperlocal E-Commerce & Kirana Platform
-### Full-Stack Retail App • Smart Counter Kiosk • Zero-Commission UPI • Cloud-Synced
+A full-stack hyperlocal ordering and store management system I designed and engineered from the ground up to solve a real challenge faced by Indian local retail businesses: **how to deliver quick-commerce convenience to local customers without losing 15% to 30% of profit margins to aggregator platforms.**
 
-[![React Native](https://img.shields.io/badge/Mobile-React%20Native%20%7C%20Expo%2052-61DAFB?logo=react&logoColor=black)](https://reactnative.dev)
-[![Web POS](https://img.shields.io/badge/POS%20Web-React%2018%20%7C%20Tailwind-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![Firebase](https://img.shields.io/badge/Cloud-Firebase%20Firestore-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Vercel](https://img.shields.io/badge/Deployed-Vercel%20Edge-black?logo=vercel&logoColor=white)](https://apna-kirana-admin.vercel.app)
-[![UPI](https://img.shields.io/badge/Payments-NPCI%20BharatQR%20%2F%20UPI-097939?logo=googlepay&logoColor=white)](https://npci.org.in)
-[![License](https://img.shields.io/badge/License-Commercial%20%2F%20Custom-orange.svg)](mailto:manish290503@gmail.com)
-
-<p align="center">
-  <b>A turnkey, white-label hyperlocal commerce solution designed to empower local businesses to compete directly with Blinkit, Zepto, and Instamart — with 0% commission and 100% direct bank settlements.</b>
-</p>
-
-[📱 Download Android Demo APK](https://expo.dev/artifacts/eas/nIR4dlW04PeJZp0LaFZju5f3hkO6WbqFClKTO0V7uAU.apk) • [💻 Launch Live Store Counter Tablet](https://apna-kirana-admin.vercel.app) • [💼 Hire / Request Custom App](#-custom-development--contact)
-
-</div>
+Whether you are a store owner wanting to run your own direct delivery channel, or a business looking for a reliable developer to build a custom on-demand ordering platform for your industry, this repository serves as a live, production-ready foundation.
 
 ---
 
-## 🌟 Why Clients Love This Platform
+## ⚡ Try the Live Demo Right Now
 
-| Feature | Aggregator Apps (Swiggy / Zomato / Blinkit) | This Platform |
-| :--- | :--- | :--- |
-| **Commissions** | ❌ **15% to 35% cut** on every order | ✅ **0% Commission** — 100% direct to your bank |
-| **Payment Settlement** | ❌ Delayed weekly or bi-weekly | ✅ **Instant UPI settlement** to merchant VPA |
-| **Customer Data** | ❌ Aggregator owns customer contacts | ✅ **You own 100% of your customer database** |
-| **Branding** | ❌ Listed among competitors | ✅ **Your own dedicated branded app & identity** |
-| **Audio Notification** | ❌ Paid third-party soundbox devices | ✅ **Built-in Voice Soundbox in Hindi/English** |
+I believe in working software over slide decks. You can test both sides of the ecosystem right now:
 
----
-
-## 🚀 Live Working Demos
-
-Experience the complete ecosystem live right now:
-
-### 1. 📱 Customer Android Mobile App (v1.0.4)
-Experience the customer journey from catalog browsing to 1-tap checkout:
+### 📱 1. Customer Android App (v1.0.4)
 * **[Download Android APK (Direct Link)](https://expo.dev/artifacts/eas/nIR4dlW04PeJZp0LaFZju5f3hkO6WbqFClKTO0V7uAU.apk)**
 * **EAS Cloud Build Verification**: [Expo Build #6](https://expo.dev/accounts/manis8873/projects/apna-kirana/builds/73551fc8-fa7e-4f41-90f2-c9b1921a54c8)
-* *Testing Guide*: Enter any mobile number -> tap **⚡ "Tap here to auto-fill 123456 & Proceed"** -> add items -> checkout via UPI.
+* **How to test**:
+  1. Install the `.apk` on any Android smartphone.
+  2. Enter any 10-digit mobile number and tap **⚡ "Tap here to auto-fill 123456 & Proceed"** to log in instantly.
+  3. Browse items, add to cart, and choose **UPI** at checkout.
+  4. Tapping **"Pay & Place Order"** will automatically trigger your installed UPI app (GPay / PhonePe / Paytm) with the merchant UPI ID (`8873679268@apl`) and exact total pre-filled.
 
-### 2. 💻 Merchant Counter Tablet (Live Web POS)
-The shopkeeper's command center for managing orders and inventory:
-* **[Open Live Web Admin Kiosk](https://apna-kirana-admin.vercel.app)**
-* **Demo Store Login Phone**: `+918873679268`
-* **Demo Counter PIN**: `8873`
-* *Features*: Live incoming order queue, soundbox voice announcements, 12-digit UTR payment verification, and printable KOT receipts.
-
----
-
-## 🎯 Adaptable to Any Retail or Service Industry
-
-While demonstrated for grocery & kirana stores, **this architecture can be customized and rebranded for any domain in 48-72 hours**:
-
-| Domain | Tailored Capabilities |
-| :--- | :--- |
-| 💊 **Pharmacy & Medical Stores** | Prescription upload, dosage instructions, scheduled refills |
-| 🍕 **Restaurants & Cloud Kitchens** | Dine-in QR menu, live kitchen display (KDS), takeaway pickup |
-| 🍰 **Bakeries & Sweet Shops** | Weight-based ordering (250g, 500g, 1kg), custom cake requests |
-| 🥩 **Fresh Meat & Seafood** | Cut & cleaning customization, cold-chain rapid delivery |
-| 🚰 **Water Can Delivery** | Daily subscription schedules, empty can return tracking |
-| 👗 **Fashion & Boutiques** | Size/color variants, lookbooks, WhatsApp direct checkout |
-| 🔨 **Hardware & Electrical** | Bulk contractor discounts, technical specs catalog |
+### 💻 2. Store Counter Tablet (Web POS)
+* **[Open Store Counter POS](https://apna-kirana-admin.vercel.app)**
+* **Login Phone**: `+918873679268`
+* **Counter PIN**: `8873`
+* **How to test**:
+  1. Open this link on a laptop, tablet, or secondary phone while placing an order on the mobile app.
+  2. You will hear the built-in **Hindi Voice Soundbox** announce the new order aloud: *"नया ऑर्डर प्राप्त हुआ। राशि ₹... रुपये।"*
+  3. Verify the customer's 12-digit UTR reference, change order status (Preparing, Out for Delivery, Delivered), and see the customer app update in under a second.
 
 ---
 
-## ⚡ Key Technical Highlights
+## 💡 Why This Beats Aggregators (Blinkit, Zepto, Swiggy)
+
+1. **Zero Commission (100% Direct Profit)**: Aggregators charge 15% to 35% cut per order. In this system, payments go directly to the merchant's bank account via standard UPI intent. No middleman fees.
+2. **Instant Settlement**: No waiting for weekly payouts. The money lands in the shopkeeper's account immediately.
+3. **Customer Ownership**: The merchant owns their customer database, phone numbers, and buying habits — not an aggregator algorithm.
+4. **Built-in Voice Soundbox**: Eliminates the monthly rental fee of external hardware soundboxes by utilizing speech synthesis on the counter screen.
+
+---
+
+## 🎯 Adaptable to Any Industry or Domain
+
+I built this codebase with modularity in mind. If you are a client in another sector, I can adapt and rebrand this platform for your exact workflow in **3 to 5 days**:
+
+* 💊 **Pharmacies & Medical Stores**: Add doctor prescription uploads, schedule monthly chronic medicine refills.
+* 🍕 **Restaurants & Cloud Kitchens**: Table QR digital menus, Kitchen Display Systems (KDS), takeaway vs delivery toggle.
+* 🍰 **Bakeries & Sweet Shops**: Weight-based pricing (250g / 500g / 1kg) and custom message-on-cake inputs.
+* 🥩 **Meat & Fresh Fish Stores**: Cut selection (curry cut, boneless) and temperature-sensitive rapid dispatch.
+* 🚰 **Water Delivery & Tiffin Services**: Daily subscription calendars and empty can/tiffin return tracking.
+* 👗 **Boutiques & Apparel**: Size/color variants, lookbook catalogs, and direct WhatsApp inquiry buttons.
+
+---
+
+## 🛠️ Architecture & Tech Stack
 
 ```
-┌─────────────────────────┐          ┌───────────────────────────┐
-│   Customer Mobile App   │          │  Merchant Counter Tablet  │
-│   (React Native/Expo)   │          │   (React + Tailwind POS)  │
-└────────────┬────────────┘          └─────────────▲─────────────┘
-             │                                     │
-             │   1. Realtime Order Placement       │
-             ▼                                     │
-┌──────────────────────────────────────────────────┴─────────────┐
-│                 Google Cloud Firestore Engine                  │
-│       • Sub-second synchronization • Realtime Listeners        │
-│       • Ephemeral OTP sessions     • Encrypted Store Data      │
-└────────────────────────────┬───────────────────────────────────┘
-                             │
-                             ▼
-┌────────────────────────────────────────────────────────────────┐
-│                   Vercel Serverless Gateway                    │
-│   • /api/send-otp   • /api/verify-otp   • Webhook Verification │
-└────────────────────────────────────────────────────────────────┘
+   ┌────────────────────────────────┐         ┌────────────────────────────────┐
+   │      Customer Mobile App       │         │      Store Counter Tablet      │
+   │  React Native (Expo SDK 52)    │         │      React 18 + Tailwind       │
+   └───────────────┬────────────────┘         └────────────────▲───────────────┘
+                   │                                           │
+                   │         1. Places Order via UPI           │
+                   ▼                                           │
+   ┌───────────────────────────────────────────────────────────┴───────────────┐
+   │                        Google Cloud Firestore                             │
+   │      • Sub-second real-time sync across devices                           │
+   │      • Automated session management & order state machine                 │
+   └───────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   ▼
+   ┌───────────────────────────────────────────────────────────────────────────┐
+   │                      Vercel Serverless Edge API                           │
+   │      • /api/send-otp   • /api/verify-otp   • Webhook Verification         │
+   └───────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1. Zero-Commission UPI Intent Payment Flow
-* Automatically launches installed UPI apps on Android (**Google Pay, PhonePe, Paytm, BHIM**) via NPCI standard deep-links (`upi://pay`).
-* Generates dynamic BharatQR for desktop/tablet scanning.
-* Verifies customer payments via 12-digit Bank Reference (UTR) numbers before fulfillment.
-
-### 2. Built-in Hindi & English Voice Soundbox
-* Built right into the web POS counter — eliminates the need to rent or buy expensive external soundbox hardware.
-* Speaks incoming order details aloud in real time:
-  > *"नया ऑर्डर प्राप्त हुआ। राशि ₹450 रुपये।"*
-
-### 3. Complete White-Label Engine
-Includes an automated rebranding script (`scripts/whitelabel.js`):
-```bash
-node scripts/whitelabel.js --name "Sharma Supermarket" --phone "+919876543210" --color "#0D9488"
-```
-Instantly updates branding, primary colors, app bundle identifiers, package names, and localized metadata.
+* **Mobile App**: React Native, Expo 52, TypeScript, React Navigation, Native Linking (UPI Deep-Links).
+* **Counter Web POS**: React 18, Tailwind CSS, Lucide Icons, Web Speech API (Hindi/English soundbox announcements), AudioContext chimes.
+* **Backend & Cloud Sync**: Firebase Cloud Firestore, Vercel Serverless Functions.
+* **Payments**: NPCI Standard UPI Intent (`upi://pay`), BharatQR, 12-digit UTR bank ledger.
+* **White-Label Script**: Includes `scripts/whitelabel.js` to automatically rebrand store name, colors, app package ID, and icons in a single command.
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## 🤝 Let's Work Together
 
-- **Mobile Frontend**: React Native, Expo SDK 52, TypeScript, React Navigation
-- **Counter POS Web**: React 18, Tailwind CSS, Lucide Icons, HTML5 Web Audio API, Web Speech Synthesis
-- **Database & Sync**: Firebase Cloud Firestore (NoSQL, sub-second latency)
-- **Authentication**: Phone OTP Verification with automated session TTL & role provisioning
-- **Cloud Infrastructure**: Vercel Serverless Functions, Expo Application Services (EAS Cloud)
-- **Payments**: NPCI UPI Deep Linking, BharatQR Standard, UTR Ledger
+I am available for:
+1. **Full White-Label Deployment**: Setting up this complete app + web dashboard for your retail business with your branding, Play Store release, and custom domain.
+2. **Custom Software Development**: Building tailored web and mobile applications from scratch for your business or startup.
+3. **Source Code Purchase**: Licensing this complete production-tested codebase for your own team or clients.
 
----
-
-## 💼 Custom Development & Contact
-
-Are you looking to:
-1. **Purchase this complete codebase** with full rights and deployment?
-2. **Rebrand this app** for your own retail store or supermarket?
-3. **Build a custom mobile & web platform** for your specific industry or startup?
-
-Let's discuss your project requirements!
-
-* **Developer**: Manish Kumar
+### Contact Me
+* **Name**: Manish Kumar
 * **GitHub**: [@Mani1454](https://github.com/Mani1454)
 * **Email**: [manish290503@gmail.com](mailto:manish290503@gmail.com)
-* **Location**: Bihar, India / Remote Worldwide
-* **Turnaround Time**: 3 to 7 days for customized white-label deployment
-
----
-
-<div align="center">
-  <sub>Built with ❤️ for Indian local commerce & global entrepreneurs.</sub>
-</div>
+* **Location**: Bihar, India (Available for remote contracts worldwide)
