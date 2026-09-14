@@ -3,9 +3,9 @@
  * ------------------------------------
  * Sets default store profile and delivery rules in Cloud Firestore:
  * - Store Name: Apna Kirana & Daily Needs
- * - Phone: +918873679268
+ * - Phone: +919876543210
  * - Physical Address: Sitamarhi, Bihar
- * - UPI VPA: 8873679268@apl
+ * - UPI VPA: apnakirana@upi
  * - Delivery: Free above ₹150, Fee ₹20, Radius 3km, Est 1 hr
  */
 
@@ -29,9 +29,9 @@ async function syncConfig() {
   const storeData = {
     store_id: 'default_store',
     store_name: 'Apna Kirana & Daily Needs',
-    contact_phone: '+918873679268',
+    contact_phone: '+919876543210',
     physical_address: 'Sitamarhi, Bihar',
-    upi_vpa: '8873679268@apl',
+    upi_vpa: 'apnakirana@upi',
     min_order_free_delivery: 150,
     min_free_delivery: 150,
     standard_delivery_fee: 20,

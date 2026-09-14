@@ -31,7 +31,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
   const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // Shopkeeper Credentials State
-  const [shopkeeperPhone, setShopkeeperPhone] = useState('8873679268');
+  const [shopkeeperPhone, setShopkeeperPhone] = useState('9876543210');
   const [shopkeeperPin, setShopkeeperPin] = useState('');
   const [shopkeeperError, setShopkeeperError] = useState<string | null>(null);
   const [showPin, setShowPin] = useState(false);
@@ -275,7 +275,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
               </View>
               <TextInput
                 style={styles.phoneInput}
-                placeholder="88736 79268"
+                placeholder="98765 43210"
                 placeholderTextColor="#94A3B8"
                 keyboardType="number-pad"
                 maxLength={10}

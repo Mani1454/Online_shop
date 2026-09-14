@@ -2,7 +2,7 @@
  * Vercel Serverless Function: /api/verify-otp
  * -------------------------------------------
  * Validates 6-digit OTP against active Cloud Firestore session.
- * On success, grants user profile and marks role ('admin' for 8873679268, else 'customer').
+ * On success, grants user profile and marks role ('admin' for 9876543210, else 'customer').
  */
 
 const { initializeApp, getApps } = require('firebase/app');
@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
 
     const cleanPhone = String(phoneNumber).replace(/\D/g, '').slice(-10);
     const code = String(otpCode).trim();
-    const isStoreOwner = cleanPhone === '8873679268' || cleanPhone === '9876543210';
+    const isStoreOwner = cleanPhone === '9876543210';
     const uid = isStoreOwner ? 'admin_shop_01' : `cust_${cleanPhone}`;
 
     const userProfile = {

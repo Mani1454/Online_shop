@@ -25,11 +25,11 @@ I believe in working software over slide decks. You can test both sides of the e
   1. Install the `.apk` on any Android smartphone.
   2. Enter any 10-digit mobile number and tap **⚡ "Tap here to auto-fill 123456 & Proceed"** to log in instantly.
   3. Browse items, add to cart, and choose **UPI** at checkout.
-  4. Tapping **"Pay & Place Order"** will automatically trigger your installed UPI app (GPay / PhonePe / Paytm) with the merchant UPI ID (`8873679268@apl`) and exact total pre-filled.
+  4. Tapping **"Pay & Place Order"** will automatically trigger your installed UPI app (GPay / PhonePe / Paytm) with the merchant UPI ID (`apnakirana@upi`) and exact total pre-filled.
 
 ### 💻 3. Store Counter Tablet (Web POS)
 * **[Open Store Counter POS](https://apna-kirana-admin.vercel.app)**
-* **Login Phone**: `+918873679268`
+* **Login Phone**: `+919876543210`
 * **Counter PIN**: `8873`
 * **How to test**:
   1. Open this link on a laptop, tablet, or secondary phone while placing an order on the customer app.

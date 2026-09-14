@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ---------------------------------------------------------------------------
   const syncOrCreateUserProfile = useCallback(async (uid: string, phoneNumber: string): Promise<UserProfile> => {
     const cleanPhone = phoneNumber.replace(/\D/g, '').slice(-10);
-    const isAdminNumber = phoneNumber.includes('8873679268') || phoneNumber.includes('9876543210');
+    const isAdminNumber = phoneNumber.includes('9876543210');
     const defaultAddress = {
       id: `addr_${cleanPhone || Date.now()}`,
       label: 'Home',
@@ -231,7 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       confirm: async (otp: string) => {
         // Accept 123456 or 6-digit code
         if (otp === '123456' || otp.length === 6) {
-          const isStoreOwner = clean === '8873679268' || clean === '9876543210';
+          const isStoreOwner = clean === '9876543210';
           const uid = isStoreOwner ? 'admin_shop_01' : `cust_${clean || Date.now()}`;
           const profile = await syncOrCreateUserProfile(uid, `+91${clean}`);
           setUserProfile(profile);
@@ -308,7 +308,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 3. Reviewer demo bypass (123456)
       if (code === '123456') {
-        const isAdm = clean === '8873679268' || clean === '9876543210';
+        const isAdm = clean === '9876543210';
         const uid = isAdm ? 'admin_shop_01' : `cust_${clean || Date.now()}`;
         const profile = await syncOrCreateUserProfile(uid, `+91${clean || '9876543210'}`);
         setUserProfile(profile);
@@ -362,14 +362,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await new Promise((res) => setTimeout(res, 400));
       const cleanPhone = phoneNumber.replace(/\D/g, '');
-      const validPins = ['8873', '1234', '887367', '0000'];
+      const validPins = ['8873', '1234', '0000'];
 
       if (!validPins.includes(pin.trim())) {
         throw new Error('Invalid Shopkeeper Security PIN. (Default PIN is 8873)');
       }
 
       const uid = 'admin_shop_01';
-      const defaultPhone = `+91${cleanPhone.slice(-10) || '8873679268'}`;
+      const defaultPhone = `+91${cleanPhone.slice(-10) || '9876543210'}`;
       const profile = await syncOrCreateUserProfile(uid, defaultPhone);
       const adminProfile: UserProfile = {
         ...profile,
@@ -398,7 +398,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isAdm = asRole === 'admin';
     const demoProfile: UserProfile = {
       uid: isAdm ? 'admin_shop_01' : 'cust_user_001',
-      phone_number: isAdm ? '+918873679268' : '+919811223344',
+      phone_number: isAdm ? '+919876543210' : '+919811223344',
       name: isAdm ? 'Apna Kirana Shopkeeper' : 'Neighborhood Customer',
       role: isAdm ? 'admin' : 'customer',
       saved_addresses: [

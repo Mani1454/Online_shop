@@ -30,7 +30,7 @@ export const PaymentOptions: React.FC<PaymentOptionsProps> = ({
   onSelectMethod,
   totalAmount,
   shopName = 'Apna Kirana & Daily Needs',
-  shopkeeperVpa = '8873679268@apl',
+  shopkeeperVpa = 'apnakirana@upi',
   isAddressSelected,
   minOrderValue = 50,
   transactionRef = '',

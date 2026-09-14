@@ -57,7 +57,7 @@ interface CheckoutScreenProps {
 export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
   cart,
   shopName = 'Apna Kirana & Daily Needs',
-  shopkeeperVpa = '8873679268@apl',
+  shopkeeperVpa = 'apnakirana@upi',
   freeDeliveryThreshold = 150,
   standardDeliveryFee = 20,
   onBackToCart,
@@ -179,7 +179,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
     }
 
     const friendlyOrderId = `#ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const custPhone = userProfile?.phone_number || '+918873679268';
+    const custPhone = userProfile?.phone_number || '+919876543210';
     const custName = userProfile?.name || 'Neighborhood Customer';
     const custUid = userProfile?.uid || `cust_${custPhone.replace(/\D/g, '').slice(-10) || Date.now()}`;
 

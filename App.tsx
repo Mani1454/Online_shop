@@ -21,7 +21,7 @@ const INITIAL_PAST_ORDERS: Order[] = [
     id: '#ORD-1045',
     customerId: 'user_1',
     customerName: 'Rohit Kumar',
-    customerPhone: '+918873679268',
+    customerPhone: '+919876543210',
     deliveryAddress: {
       id: 'addr_1',
       userId: 'user_1',

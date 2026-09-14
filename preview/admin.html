@@ -181,7 +181,7 @@
         total: 198,
         status: 'OUT_FOR_DELIVERY', // Out
         elapsedMinutes: 22,
-        rider: 'Ramesh (+918873679268)',
+        rider: 'Ramesh (+919876543210)',
         items: [
           { id: '5', name: 'India Gate Basmati Rice Rozzana', unit: '1 kg', qty: 2, price: 99 }
         ]
@@ -313,9 +313,9 @@
       // Delivery Settings
       const [minFreeDelivery, setMinFreeDelivery] = useState('150');
       const [standardDeliveryFee, setStandardDeliveryFee] = useState('20');
-      const [upiVpa, setUpiVpa] = useState('8873679268@apl');
+      const [upiVpa, setUpiVpa] = useState('apnakirana@upi');
       const [storeAddress, setStoreAddress] = useState('Sitamarhi, Bihar');
-      const [storePhone, setStorePhone] = useState('+918873679268');
+      const [storePhone, setStorePhone] = useState('+919876543210');
 
       // Real-Time Store Config Listener
       useEffect(() => {
@@ -380,7 +380,7 @@
                     id: data.order_id || doc.id,
                     docId: doc.id,
                     customer: data.customer_name || 'Customer',
-                    phone: data.customer_phone || '+918873679268',
+                    phone: data.customer_phone || '+919876543210',
                     address: data.delivery_address?.streetAddress || 'Doorstep Delivery',
                     landmark: data.delivery_address?.landmark || '',
                     payment: data.payment_method || 'COD',
@@ -494,13 +494,13 @@
       };
 
       const dispatchOrder = async (orderId) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'OUT_FOR_DELIVERY', rider: 'Delivery Partner (+918873679268)' } : o));
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'OUT_FOR_DELIVERY', rider: 'Delivery Partner (+919876543210)' } : o));
         if (firebaseDb) {
           try {
             const cleanId = orderId.replace('#', '');
             await firebaseDb.collection('orders').doc(cleanId).update({
               status: 'OUT_FOR_DELIVERY',
-              delivery_partner: { name: 'Store Delivery Partner', phone: '+918873679268' },
+              delivery_partner: { name: 'Store Delivery Partner', phone: '+919876543210' },
               status_timeline: firebase.firestore.FieldValue.arrayUnion({
                 status: 'OUT_FOR_DELIVERY',
                 timestamp: new Date().toISOString(),
