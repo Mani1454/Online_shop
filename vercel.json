@@ -9,6 +9,26 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/customer",
+      "destination": "/customer.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/customer.html"
+    },
+    {
+      "source": "/shop",
+      "destination": "/customer.html"
+    },
+    {
+      "source": "/demo",
+      "destination": "/live_demo.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

@@ -36,13 +36,14 @@
     const { useState, useMemo } = React;
 
     const MOCK_STORE = {
-      name: "Apna Kirana",
+      name: "Apna Kirana & Daily Needs",
       isOpen: true,
-      deliveryTime: "15-25 mins",
+      deliveryTime: "1 hr",
       minFreeDelivery: 150,
       standardFee: 20,
-      vpa: "apnakirana@okaxis",
-      phone: "+919876543210"
+      vpa: "8873679268@apl",
+      phone: "+918873679268",
+      address: "Sitamarhi, Bihar"
     };
 
     const MOCK_CATEGORIES = [
@@ -188,7 +189,19 @@
       }, [activeStepIndex]);
 
       return (
-        <div className="w-[390px] h-[844px] bg-slate-50 shadow-2xl rounded-[44px] overflow-hidden flex flex-col relative border-8 border-slate-800">
+        <div className="flex flex-col items-center justify-center min-h-screen w-full p-0 sm:py-6">
+          {/* Top Desktop Helper Nav */}
+          <div className="hidden sm:flex items-center gap-3 mb-3 bg-slate-800/95 border border-slate-700 px-4 py-2 rounded-full text-xs text-slate-300 shadow-xl">
+            <span className="font-bold text-emerald-400">📱 Customer App Web View</span>
+            <span className="text-slate-500">•</span>
+            <span>Instant Demo (No APK Required)</span>
+            <span className="text-slate-500">•</span>
+            <a href="admin.html" className="text-sky-400 hover:text-sky-300 font-bold underline">Launch Admin Counter Tablet →</a>
+            <span className="text-slate-500">•</span>
+            <a href="live_demo.html" className="text-amber-400 hover:text-amber-300 font-bold underline">Dual Split View ⚡</a>
+          </div>
+
+          <div className="w-full max-w-[420px] h-screen sm:h-[844px] bg-slate-50 shadow-2xl sm:rounded-[44px] overflow-hidden flex flex-col relative sm:border-8 sm:border-slate-800">
           
           {/* iOS Top Bar */}
           <div className="bg-emerald-700 px-6 pt-3 pb-1 flex justify-between items-center text-white text-xs font-semibold select-none">
@@ -616,6 +629,7 @@
           {/* Device bar */}
           <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-slate-300 rounded-full pointer-events-none"></div>
         </div>
+      </div>
       );
     }
 

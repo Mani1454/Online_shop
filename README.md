@@ -1,5 +1,7 @@
-﻿# 🛒 Hyperlocal Commerce & Store Management Engine
+# 🛒 Hyperlocal Commerce & Store Management Engine
 ### Built by Manish Kumar ([@Mani1454](https://github.com/Mani1454))
+
+[🌐 **Try Customer App in Browser**](https://apna-kirana-admin.vercel.app/customer.html) • [📱 **Download Android APK**](https://expo.dev/artifacts/eas/nIR4dlW04PeJZp0LaFZju5f3hkO6WbqFClKTO0V7uAU.apk) • [💻 **Store Counter Tablet**](https://apna-kirana-admin.vercel.app) • [🔄 **Dual Split Demo**](https://apna-kirana-admin.vercel.app/live_demo.html)
 
 A full-stack hyperlocal ordering and store management system I designed and engineered from the ground up to solve a real challenge faced by Indian local retail businesses: **how to deliver quick-commerce convenience to local customers without losing 15% to 30% of profit margins to aggregator platforms.**
 
@@ -11,7 +13,12 @@ Whether you are a store owner wanting to run your own direct delivery channel, o
 
 I believe in working software over slide decks. You can test both sides of the ecosystem right now:
 
-### 📱 1. Customer Android App (v1.0.4)
+### 🌐 1. Customer App (Instant Web Demo — No Download Required)
+* **[Open Customer App Web View](https://apna-kirana-admin.vercel.app/customer.html)**
+* *Designed for clients on iPhone, Mac, Windows, or Android who want to experience the customer ordering journey immediately without downloading an APK.*
+* *Features full category navigation, live search, cart calculations, address input, UPI payment flow, and delivery timeline tracking.*
+
+### 📱 2. Customer Android App (v1.0.4 APK)
 * **[Download Android APK (Direct Link)](https://expo.dev/artifacts/eas/nIR4dlW04PeJZp0LaFZju5f3hkO6WbqFClKTO0V7uAU.apk)**
 * **EAS Cloud Build Verification**: [Expo Build #6](https://expo.dev/accounts/manis8873/projects/apna-kirana/builds/73551fc8-fa7e-4f41-90f2-c9b1921a54c8)
 * **How to test**:
@@ -20,14 +27,18 @@ I believe in working software over slide decks. You can test both sides of the e
   3. Browse items, add to cart, and choose **UPI** at checkout.
   4. Tapping **"Pay & Place Order"** will automatically trigger your installed UPI app (GPay / PhonePe / Paytm) with the merchant UPI ID (`8873679268@apl`) and exact total pre-filled.
 
-### 💻 2. Store Counter Tablet (Web POS)
+### 💻 3. Store Counter Tablet (Web POS)
 * **[Open Store Counter POS](https://apna-kirana-admin.vercel.app)**
 * **Login Phone**: `+918873679268`
 * **Counter PIN**: `8873`
 * **How to test**:
-  1. Open this link on a laptop, tablet, or secondary phone while placing an order on the mobile app.
+  1. Open this link on a laptop, tablet, or secondary phone while placing an order on the customer app.
   2. You will hear the built-in **Hindi Voice Soundbox** announce the new order aloud: *"नया ऑर्डर प्राप्त हुआ। राशि ₹... रुपये।"*
   3. Verify the customer's 12-digit UTR reference, change order status (Preparing, Out for Delivery, Delivered), and see the customer app update in under a second.
+
+### 🔄 4. Side-by-Side Dual Demo (Split Screen)
+* **[Launch Side-by-Side Live Demo](https://apna-kirana-admin.vercel.app/live_demo.html)**
+* *Displays both the Customer Smartphone on the left and the Shopkeeper Counter on the right in a single browser window for quick client presentations.*
 
 ---
 
