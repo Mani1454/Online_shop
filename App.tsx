@@ -13,7 +13,7 @@ import { analyticsService } from './src/services/AnalyticsService';
 import { crashlyticsService } from './src/services/CrashlyticsService';
 import { CartItem, Product, Order, OrderItem } from './src/types/schema';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { doc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, onSnapshot, collection, query, where } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './src/services/firebaseConfig';
 
 const INITIAL_PAST_ORDERS: Order[] = [
@@ -21,14 +21,14 @@ const INITIAL_PAST_ORDERS: Order[] = [
     id: '#ORD-1045',
     customerId: 'user_1',
     customerName: 'Rohit Kumar',
-    customerPhone: '+919876543210',
+    customerPhone: '+918873679268',
     deliveryAddress: {
       id: 'addr_1',
       userId: 'user_1',
       label: 'Home',
-      streetAddress: 'Flat 302, Green Valley Apartments, Pocket 2',
-      landmark: 'Near Community Park Gate 1',
-      pincode: '110001',
+      streetAddress: 'Main Market, Sitamarhi, Bihar',
+      landmark: 'Near City Center',
+      pincode: '843302',
       isDefault: true,
     },
     items: [
@@ -157,6 +157,70 @@ function AppContent() {
       console.warn('Live order listener setup note:', e);
     }
   }, [activeOrder?.id, activeOrder?.status]);
+
+  // 5. Real-time Customer Orders Sync from Firestore
+  useEffect(() => {
+    if (!userProfile?.uid || !isFirebaseConfigured()) return;
+    try {
+      const q = query(
+        collection(db, 'orders'),
+        where('customer_uid', '==', userProfile.uid)
+      );
+      const unsub = onSnapshot(
+        q,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const mappedOrders: Order[] = snapshot.docs.map((docSnap) => {
+              const d = docSnap.data();
+              return {
+                id: d.order_id || docSnap.id,
+                customerId: d.customer_uid || userProfile.uid,
+                customerName: d.customer_name || userProfile.name,
+                customerPhone: d.customer_phone || userProfile.phone_number,
+                deliveryAddress: d.delivery_address || {
+                  id: 'addr_sitamarhi',
+                  userId: userProfile.uid,
+                  label: 'Home',
+                  streetAddress: 'Main Market, Sitamarhi, Bihar',
+                  landmark: 'Near City Center',
+                  pincode: '843302',
+                  isDefault: true,
+                },
+                items: (d.items || []).map((it: any, idx: number) => ({
+                  id: it.product_id || `it_${idx}`,
+                  productId: it.product_id,
+                  productName: it.name,
+                  unit: it.unit_size || '1 unit',
+                  quantity: it.quantity || 1,
+                  unitPrice: it.selling_price || 0,
+                  totalPrice: it.subtotal || (it.selling_price * it.quantity),
+                  imageUrl: it.image_url,
+                })),
+                itemTotal: d.item_total || 0,
+                deliveryFee: d.delivery_fee || 0,
+                discountAmount: d.discount_amount || 0,
+                finalTotal: d.total_amount || d.final_total || 0,
+                paymentMethod: d.payment_method || 'COD',
+                paymentStatus: d.payment_status || 'PENDING',
+                transactionRef: d.transaction_ref || '',
+                status: d.status || 'RECEIVED',
+                statusTimeline: d.status_timeline || [],
+                createdAt: d.created_at?.toDate ? d.created_at.toDate().toISOString() : new Date().toISOString(),
+                updatedAt: d.updated_at?.toDate ? d.updated_at.toDate().toISOString() : new Date().toISOString(),
+              };
+            });
+            setOrders(mappedOrders);
+          }
+        },
+        (err) => {
+          console.warn('Customer orders listener note:', err.message);
+        }
+      );
+      return () => unsub();
+    } catch (e) {
+      console.warn('Customer orders setup note:', e);
+    }
+  }, [userProfile?.uid]);
 
   // If not authenticated, render LoginScreen directly
   if (!isAuthenticated) {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Linking,
   Alert,
+  Image,
+  TextInput,
 } from 'react-native';
 import { PaymentMethod } from '../types/schema';
 import { Colors, Typography, Spacing, Shadows } from '../theme/colors';
@@ -18,6 +20,8 @@ interface PaymentOptionsProps {
   shopkeeperVpa?: string;
   isAddressSelected: boolean;
   minOrderValue?: number;
+  transactionRef?: string;
+  onTransactionRefChange?: (ref: string) => void;
   onPaymentSuccess?: (transactionRef?: string) => void;
 }
 
@@ -29,7 +33,10 @@ export const PaymentOptions: React.FC<PaymentOptionsProps> = ({
   shopkeeperVpa = '8873679268@apl',
   isAddressSelected,
   minOrderValue = 50,
+  transactionRef = '',
+  onTransactionRefChange,
 }) => {
+  const [showQr, setShowQr] = useState<boolean>(true);
   const isMinOrderMet = totalAmount >= minOrderValue;
   const isOrderValid = isMinOrderMet && isAddressSelected;
 
@@ -186,9 +193,71 @@ export const PaymentOptions: React.FC<PaymentOptionsProps> = ({
             >
               <Text style={styles.upiLaunchIcon}>⚡</Text>
               <Text style={styles.upiLaunchText}>
-                Pay ₹{totalAmount} via Any UPI App
+                Pay ₹{totalAmount} via Installed UPI App
               </Text>
             </TouchableOpacity>
+
+            {/* QR Toggle Button */}
+            <TouchableOpacity
+              style={styles.qrToggleBtn}
+              onPress={() => setShowQr(!showQr)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.qrToggleText}>
+                {showQr ? '🔼 Hide BharatQR Code' : '📷 Show BharatQR Code to Scan'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* BharatQR Code Card */}
+            {showQr && (
+              <View style={styles.qrContainer}>
+                <View style={styles.qrCard}>
+                  <Text style={styles.qrStoreTitle}>{shopName}</Text>
+                  <Text style={styles.qrAmountText}>₹{totalAmount.toFixed(2)}</Text>
+
+                  <View style={styles.qrImageWrapper}>
+                    <Image
+                      source={{
+                        uri: `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(buildUpiDeepLink())}`,
+                      }}
+                      style={styles.qrImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+
+                  <Text style={styles.qrScanInstructions}>
+                    Scan using Google Pay, PhonePe, Paytm, or BHIM
+                  </Text>
+                  <Text style={styles.qrVpaSubtext}>VPA: {shopkeeperVpa}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* 12-Digit Bank UTR Input Field */}
+            <View style={styles.utrBox}>
+              <View style={styles.utrHeaderRow}>
+                <Text style={styles.utrTitle}>12-Digit Bank UTR / UPI Ref</Text>
+                <View style={styles.utrBadge}>
+                  <Text style={styles.utrBadgeText}>RECOMMENDED</Text>
+                </View>
+              </View>
+              <Text style={styles.utrSubtitle}>
+                भुगतान के बाद 12 अंकों का UTR नंबर यहाँ दर्ज करें
+              </Text>
+              <TextInput
+                style={styles.utrInput}
+                placeholder="e.g. 423456789012"
+                placeholderTextColor={Colors.textMuted}
+                value={transactionRef}
+                onChangeText={onTransactionRefChange}
+                keyboardType="numeric"
+                maxLength={16}
+                accessibilityLabel="Enter 12 digit UTR number"
+              />
+              <Text style={styles.utrHintText}>
+                💡 Check your UPI transaction receipt in Google Pay/PhonePe/Paytm for this 12-digit reference number.
+              </Text>
+            </View>
           </View>
         )}
       </TouchableOpacity>
@@ -407,5 +476,125 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xs,
     color: Colors.textSecondary,
     fontWeight: Typography.weights.medium,
+  },
+  qrToggleBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    marginTop: 8,
+  },
+  qrToggleText: {
+    fontSize: Typography.sizes.xs + 1,
+    color: Colors.primaryDark,
+    fontWeight: Typography.weights.bold,
+  },
+  qrContainer: {
+    alignItems: 'center',
+    marginVertical: Spacing.sm,
+  },
+  qrCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    width: '100%',
+    maxWidth: 280,
+    ...Shadows.card,
+  },
+  qrStoreTitle: {
+    fontSize: 13,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  qrAmountText: {
+    fontSize: 22,
+    fontWeight: Typography.weights.extraBold,
+    color: Colors.primaryDark,
+    marginBottom: 10,
+  },
+  qrImageWrapper: {
+    width: 184,
+    height: 184,
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qrImage: {
+    width: 168,
+    height: 168,
+  },
+  qrScanInstructions: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 10,
+    fontWeight: Typography.weights.medium,
+  },
+  qrVpaSubtext: {
+    fontSize: 11,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginTop: 2,
+  },
+  utrBox: {
+    marginTop: Spacing.md,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  utrHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  utrTitle: {
+    fontSize: Typography.sizes.xs + 1,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+  },
+  utrBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  utrBadgeText: {
+    fontSize: 9,
+    fontWeight: Typography.weights.extraBold,
+    color: '#166534',
+  },
+  utrSubtitle: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  utrInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    height: 44,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    letterSpacing: 1,
+  },
+  utrHintText: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    marginTop: 6,
+    lineHeight: 14,
   },
 });

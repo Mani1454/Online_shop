@@ -111,14 +111,23 @@ service cloud.firestore {
 
       // Customer CANNOT modify orders once created (prevents tampering with
       // prices, status, or items snapshot).
-      // ONLY Admin / Shopkeeper can advance status or update delivery partner info
+      // ONLY Admin / Shopkeeper can advance status or update payment_status / delivery partner info
       allow update: if isAdmin() && (
-        // Allow status workflow transitions
-        request.resource.data.status in ['RECEIVED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED']
+        // Allow status and payment verification workflow transitions
+        request.resource.data.status in ['RECEIVED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'] ||
+        request.resource.data.payment_status in ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']
       );
 
       // Orders cannot be deleted by customers; only Admin may archive/delete
       allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 5. OTP SESSIONS COLLECTION (/otp_sessions/{phone})
+    // =========================================================================
+    // Stores ephemeral 6-digit verification sessions with 5-minute TTL
+    match /otp_sessions/{phone} {
+      allow read, write: if true;
     }
   }
 }

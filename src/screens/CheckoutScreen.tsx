@@ -13,30 +13,31 @@ import {
 } from 'react-native';
 import { AddressSelector } from '../components/AddressSelector';
 import { PaymentOptions } from '../components/PaymentOptions';
+import { useAuth } from '../context/AuthContext';
 import { Address, CartItem, PaymentMethod, Order } from '../types/schema';
 import { Colors, Typography, Spacing, Shadows } from '../theme/colors';
 
-const INITIAL_ADDRESSES: Address[] = [
+const DEFAULT_SITAMARHI_ADDRESSES: Address[] = [
   {
-    id: 'addr_1',
-    userId: 'user_1',
+    id: 'addr_sitamarhi_1',
+    userId: 'cust_sitamarhi',
     label: 'Home',
-    streetAddress: 'Flat 302, Green Valley Apartments, Pocket 2',
-    landmark: 'Near Community Park Gate 1',
-    pincode: '110001',
-    latitude: 28.6139,
-    longitude: 77.209,
+    streetAddress: 'Main Market, Sitamarhi, Bihar',
+    landmark: 'Near City Center',
+    pincode: '843302',
+    latitude: 26.5947,
+    longitude: 85.4891,
     isDefault: true,
   },
   {
-    id: 'addr_2',
-    userId: 'user_1',
+    id: 'addr_sitamarhi_2',
+    userId: 'cust_sitamarhi',
     label: 'Work',
-    streetAddress: 'Shop 14, Main Market, Sector 4',
-    landmark: 'Opposite State Bank',
-    pincode: '110001',
-    latitude: 28.6145,
-    longitude: 77.2105,
+    streetAddress: 'Court Road, Sitamarhi, Bihar',
+    landmark: 'Opposite State Bank of India',
+    pincode: '843302',
+    latitude: 26.5955,
+    longitude: 85.4912,
     isDefault: false,
   },
 ];
@@ -62,10 +63,28 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
   onOrderPlaced,
   onTrackOrder,
 }) => {
-  const [addresses, setAddresses] = useState<Address[]>(INITIAL_ADDRESSES);
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(
-    INITIAL_ADDRESSES[0] || null
-  );
+  const { userProfile } = useAuth();
+  const [transactionRef, setTransactionRef] = useState<string>('');
+
+  const [addresses, setAddresses] = useState<Address[]>(() => {
+    if (userProfile?.saved_addresses && userProfile.saved_addresses.length > 0) {
+      return userProfile.saved_addresses.map((a, idx) => ({
+        id: a.id || `addr_${idx}`,
+        userId: userProfile.uid,
+        label: (a.label as any) || 'Home',
+        streetAddress: (a as any).street_address || (a as any).streetAddress || 'Main Market, Sitamarhi, Bihar',
+        landmark: a.landmark || 'Near City Center',
+        pincode: a.pincode || '843302',
+        isDefault: a.is_default ?? idx === 0,
+      }));
+    }
+    return DEFAULT_SITAMARHI_ADDRESSES;
+  });
+
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(() => {
+    return addresses[0] || null;
+  });
+
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('UPI');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
@@ -92,7 +111,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
     const newAddress: Address = {
       ...newAddrData,
       id: `addr_${Date.now()}`,
-      userId: 'user_1',
+      userId: userProfile?.uid || 'cust_user_001',
     };
     setAddresses((prev) => [newAddress, ...prev]);
     setSelectedAddress(newAddress);
@@ -111,13 +130,17 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
 
     setIsSubmitting(true);
 
-    // Simulate backend / database order generation
     const friendlyOrderId = `#ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const custPhone = userProfile?.phone_number || '+918873679268';
+    const custName = userProfile?.name || 'Neighborhood Customer';
+    const custUid = userProfile?.uid || `cust_${custPhone.replace(/\D/g, '').slice(-10) || Date.now()}`;
+    const cleanUtr = transactionRef.trim();
+
     const newOrder: Order = {
       id: friendlyOrderId,
-      customerId: 'user_1',
-      customerName: 'Customer',
-      customerPhone: '+918873679268',
+      customerId: custUid,
+      customerName: custName,
+      customerPhone: custPhone,
       deliveryAddress: selectedAddress,
       items: cartList.map(({ product, quantity }) => ({
         id: `item_${product.id}_${Date.now()}`,
@@ -134,14 +157,16 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
       discountAmount: 0,
       finalTotal: grandTotal,
       paymentMethod,
-      paymentStatus: paymentMethod === 'UPI' ? 'COMPLETED' : 'PENDING',
-      transactionRef: paymentMethod === 'UPI' ? `UPI-${Date.now()}` : undefined,
+      paymentStatus: paymentMethod === 'UPI' ? (cleanUtr ? 'COMPLETED' : 'PENDING') : 'PENDING',
+      transactionRef: paymentMethod === 'UPI' ? (cleanUtr || `UPI-${Date.now().toString().slice(-6)}`) : undefined,
       status: 'RECEIVED',
       statusTimeline: [
         {
           status: 'RECEIVED',
           timestamp: new Date().toISOString(),
-          note: 'Order placed by customer',
+          note: paymentMethod === 'UPI'
+            ? `Order placed with UPI${cleanUtr ? ` (UTR: ${cleanUtr})` : ''}`
+            : 'Order placed with Cash on Delivery',
         },
       ],
       createdAt: new Date().toISOString(),
@@ -249,6 +274,8 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
           shopkeeperVpa={shopkeeperVpa}
           isAddressSelected={!!selectedAddress}
           minOrderValue={50}
+          transactionRef={transactionRef}
+          onTransactionRefChange={setTransactionRef}
         />
       </ScrollView>
 
